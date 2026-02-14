@@ -1,0 +1,81 @@
+[
+  {
+    "id": "binance",
+    "sourceName": "Binance",
+    "type": "crypto",
+    "description": "Crypto investments on Binance exchange",
+    "items": [
+      {
+        "id": "btc-2026-01",
+        "assetName": "Bitcoin",
+        "term": "long",
+        "investedAmount": 3500,
+        "entryDate": "2025-02-14",
+        "exitDate": "2026-01-09",
+        "result": "profit",
+        "resultAmount": 500,
+        "status": "closed"
+      },
+      {
+        "id": "eth-2026-02",
+        "assetName": "Ethereum",
+        "term": "middle",
+        "investedAmount": 1500,
+        "entryDate": "2025-05-01",
+        "exitDate": null,
+        "result": "none",
+        "resultAmount": null,
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "kucoin",
+    "sourceName": "KuCoin",
+    "type": "crypto",
+    "description": "KuCoin spot assets",
+    "items": [
+      {
+        "id": "kucoin-doge-2025",
+        "assetName": "Dogecoin",
+        "term": "short",
+        "investedAmount": 200,
+        "entryDate": "2025-07-30",
+        "exitDate": "2025-12-30",
+        "result": "loss",
+        "resultAmount": -40,
+        "status": "closed"
+      }
+    ]
+  },
+  {
+    "id": "forex_com",
+    "sourceName": "Forex.com",
+    "type": "forex",
+    "description": "Forex trading positions",
+    "items": [
+      {
+        "id": "eurusd-2026-01",
+        "assetName": "EUR/USD",
+        "term": "short",
+        "investedAmount": 1000,
+        "entryDate": "2025-12-12",
+        "exitDate": "2026-01-06",
+        "result": "profit",
+        "resultAmount": 120,
+        "status": "closed"
+      },
+      {
+        "id": "gbpusd-2026-02",
+        "assetName": "GBP/USD",
+        "term": "middle",
+        "investedAmount": 1100,
+        "entryDate": "2026-01-08",
+        "exitDate": null,
+        "result": "none",
+        "resultAmount": null,
+        "status": "open"
+      }
+    ]
+  }
+]

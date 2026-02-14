@@ -1,0 +1,102 @@
+[
+  {
+    "id": "salary",
+    "sourceName": "Salary",
+    "description": "Main salary from full-time job",
+    "payments": [
+      {
+        "id": "spaces_city",
+        "name": "Spaces in the City",
+        "type": "bank_transfer",
+        "amount": 5600.0,
+        "date": "2025-10-12",
+        "loop": true,
+        "status": "paid"
+      },
+      {
+        "id": "monthly_bonus",
+        "name": "Monthly Bonus",
+        "type": "cash",
+        "amount": 500.0,
+        "date": "2025-10-15",
+        "loop": true,
+        "status": "coming"
+      }
+    ]
+  },
+  {
+    "id": "upwork",
+    "sourceName": "Upwork",
+    "description": "Freelance clients via Upwork",
+    "payments": [
+      {
+        "id": "client_alpha",
+        "name": "Client Alpha",
+        "type": "bank_transfer",
+        "amount": 1200.0,
+        "date": "2025-10-07",
+        "loop": false,
+        "status": "paid"
+      },
+      {
+        "id": "client_beta",
+        "name": "Client Beta",
+        "type": "bank_transfer",
+        "amount": 850.0,
+        "date": "2025-10-14",
+        "loop": false,
+        "status": "coming"
+      }
+    ]
+  },
+  {
+    "id": "investment_returns",
+    "sourceName": "Investment Returns",
+    "description": "Income from stock & crypto investments",
+    "payments": [
+      {
+        "id": "dividends",
+        "name": "Quarterly Dividends",
+        "type": "bank_transfer",
+        "amount": 400.0,
+        "date": "2025-09-30",
+        "loop": true,
+        "status": "paid"
+      },
+      {
+        "id": "crypto_gain",
+        "name": "Crypto Gains",
+        "type": "bank_transfer",
+        "amount": 320.0,
+        "date": "2025-10-17",
+        "loop": false,
+        "status": "coming"
+      }
+    ]
+  },
+  {
+    "id": "misc_income",
+    "sourceName": "Miscellaneous Income",
+    "description": "Other periodic or unexpected income sources",
+    "payments": [
+      {
+        "id": "cashback",
+        "name": "Credit Card Cashback",
+        "type": "credit_card",
+        "amount": 25.0,
+        "date": "2025-10-22",
+        "loop": true,
+        "status": "coming"
+      },
+      {
+        "id": "gift",
+        "name": "Birthday Gift",
+        "type": "cash",
+        "amount": 100.0,
+        "date": "2025-10-10",
+        "loop": false,
+        "status": "paid"
+      }
+    ]
+  }
+]

@@ -1,0 +1,111 @@
+[
+  {
+    "id": "bills",
+    "sourceName": "Bills",
+    "description": "Monthly utility and service bills",
+    "payments": [
+      {
+        "id": "kub",
+        "name": "Kub",
+        "type": "credit_card",
+        "amount": 400.0,
+        "date": "2025-12-25",
+        "loop": true,
+        "status": "paid"
+      },
+      {
+        "id": "cell",
+        "name": "Cell",
+        "type": "credit_card",
+        "amount": 50.0,
+        "date": "2025-12-01",
+        "loop": true,
+        "status": "coming"
+      },
+      {
+        "id": "wifi",
+        "name": "WiFi",
+        "type": "bank_transfer",
+        "amount": 45.99,
+        "date": "2025-12-10",
+        "loop": true,
+        "status": "paid"
+      }
+    ]
+  },
+  {
+    "id": "debts",
+    "sourceName": "Debts",
+    "description": "Recurring and personal debts",
+    "payments": [
+      {
+        "id": "car_loan",
+        "name": "Car Payment",
+        "type": "bank_transfer",
+        "amount": 300.0,
+        "date": "2025-12-08",
+        "loop": true,
+        "status": "coming"
+      },
+      {
+        "id": "credit_card",
+        "name": "Visa Card",
+        "type": "credit_card",
+        "amount": 150.0,
+        "date": "2025-12-12",
+        "loop": true,
+        "status": "paid"
+      }
+    ]
+  },
+  {
+    "id": "groceries",
+    "sourceName": "Groceries",
+    "description": "Weekly food and household shopping expenses",
+    "payments": [
+      {
+        "id": "market_1",
+        "name": "Supermarket",
+        "type": "debit_card",
+        "amount": 120.25,
+        "date": "2025-12-03",
+        "loop": false,
+        "status": "paid"
+      },
+      {
+        "id": "market_2",
+        "name": "Farmer's Market",
+        "type": "cash",
+        "amount": 34.1,
+        "date": "2025-12-10",
+        "loop": false,
+        "status": "coming"
+      }
+    ]
+  },
+  {
+    "id": "miscellaneous",
+    "sourceName": "Miscellaneous",
+    "description": "Other occasional expenses",
+    "payments": [
+      {
+        "id": "shirt",
+        "name": "Clothing Store",
+        "type": "credit_card",
+        "amount": 65.0,
+        "date": "2025-12-15",
+        "loop": false,
+        "status": "paid"
+      },
+      {
+        "id": "present",
+        "name": "Birthday Gift",
+        "type": "cash",
+        "amount": 40.0,
+        "date": "2025-12-20",
+        "loop": false,
+        "status": "coming"
+      }
+    ]
+  }
+]

@@ -1,0 +1,96 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { FinancePayment } from '@/types/finance';
+import { PAYMENT_FIELDS } from '@/constants/fieldConfig';
+import FieldInput from '../forms/FieldInput';
+
+type AddPaymentModalProps = {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (payment: FinancePayment) => void;
+};
+
+function makeBlankPayment(): FinancePayment {
+  return {
+    id: Date.now().toString() + Math.random().toString(36).slice(2),
+    name: '',
+    type: '',
+    amount: 0,
+    date: '',
+    loop: false,
+    status: 'coming',
+  };
+}
+
+export default function AddPaymentModal({ open, onClose, onSubmit }: AddPaymentModalProps) {
+  const [form, setForm] = useState<FinancePayment>(makeBlankPayment());
+  const [errors, setErrors] = useState<{ [k: string]: string }>({});
+
+  useEffect(() => {
+    if (open) {
+      setForm(makeBlankPayment());
+      setErrors({});
+    }
+  }, [open]);
+
+  function handleInput(field: keyof FinancePayment, value: any) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function validate() {
+    const err: typeof errors = {};
+    if (!form.name) err.name = 'Name required';
+    if (!form.type) err.type = 'Type required';
+    if (form.amount == null) err.amount = 'Amount required';
+    if (!form.date) err.date = 'Date required';
+    setErrors(err);
+    return Object.keys(err).length === 0;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (validate()) {
+      onSubmit(form);
+      onClose();
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-opacity-40 p-1">
+      <div className="w-full max-w-lg bg-[#989899] rounded-lg shadow-2xl p-4 relative flex flex-col max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#29388A] scrollbar-track-[#989899]">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <h2 className="text-2xl font-bold mb-2 text-[#29388A] text-center">Add Payment</h2>
+          {PAYMENT_FIELDS.map((f) => (
+            <FieldInput
+              key={f.field}
+              label={f.label}
+              type={f.type}
+              enumOptions={f.enumOptions}
+              value={form[f.field as keyof FinancePayment]}
+              onChange={(v) => handleInput(f.field as keyof FinancePayment, v)}
+              err={errors[f.field]}
+            />
+          ))}
+          <div className="flex justify-center gap-2 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded bg-[#29388A] text-white hover:bg-blue-800 font-semibold"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
