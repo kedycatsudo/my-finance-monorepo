@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:3001":"PORT=3001 next",
     "build": "next build",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d out",
