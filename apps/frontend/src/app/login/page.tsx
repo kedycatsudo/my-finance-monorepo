@@ -7,6 +7,7 @@ import { useModal } from '@/context/ModalContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { assetPrefix, basePath } from '@/constants/config';
+
 export default function LoginPage() {
   const { login } = useAuth();
   const { showModal } = useModal();
@@ -14,20 +15,22 @@ export default function LoginPage() {
   // Form State
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // call authContext's login
-
-    const res = login(username, password);
+    setLoading(true);
+    // Await the Promise-based login
+    const res = await login(username, password);
+    setLoading(false);
     showModal(res.message); // show feedback as modal (success or error)
     if (res.success) {
-      // clear the form
       setUsername('');
       setPassword('');
       router.push('/dashboard');
     }
   }
+
   return (
     <main className="flex flex-col items-center justify-center relative px-2 sm:px-4">
       <Image
@@ -36,7 +39,7 @@ export default function LoginPage() {
         width={250}
         height={250}
         className=" shadow-lg rounded-full object-cover z-[9999] mt-2"
-      ></Image>
+      />
       <h1 className="text-3xl xs:text-6xl font-bold text-[#1E1552] mb-8 w-full text-center z-10">
         Login
       </h1>
@@ -64,8 +67,9 @@ export default function LoginPage() {
           <button
             type="submit"
             className="mt-4 p-3 rounded-lg bg-[#1E1552] opacity-50 text-white font-bold hover:bg-[#18123d] hover:opacity-100 transition w-full"
+            disabled={loading}
           >
-            Submit
+            {loading ? 'Logging in...' : 'Submit'}
           </button>
         </form>
         <p className="text-xs text-white mt-4 opacity-70 text-center">

@@ -6,7 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/context/ModalContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { assetPrefix, basePath } from '@/constants/config';
+import { assetPrefix } from '@/constants/config';
+
 export default function RegisterPage() {
   const { register } = useAuth();
   const { showModal } = useModal();
@@ -20,9 +21,12 @@ export default function RegisterPage() {
 
   // Per-field errors state
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Validate fields
     const errors: { [key: string]: string } = {};
     if (!username) errors.username = 'Username is required';
     if (!password) errors.password = 'Password is required';
@@ -30,17 +34,18 @@ export default function RegisterPage() {
     if (!monthlyCircleDate) errors.monthlyCircleDate = 'Monthly circle date is required';
 
     setFormErrors(errors);
-
     if (Object.keys(errors).length > 0) return;
 
-    const res = register({ username, email, monthlyCircleDate, password });
+    setLoading(true);
+    // Await async register
+    const res = await register({ username, email, monthly_circle_date: monthlyCircleDate, password });
+    setLoading(false);
 
-    // Handle duplicate username/email errors and show under correct field.
+    // Handle per-field errors if provided
     if (!res.success) {
-      // Very basic error discrimination based on msg text:
-      if (res.message.includes('Username')) {
+      if (res.message?.includes('Username')) {
         setFormErrors({ username: res.message });
-      } else if (res.message.includes('email')) {
+      } else if (res.message?.includes('email')) {
         setFormErrors({ email: res.message });
       } else {
         setFormErrors({ general: res.message });
@@ -49,7 +54,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // Success: clear, feedback, redirect
+    // Success: clear form, feedback, redirect
     setUsername('');
     setPassword('');
     setEmail('');
@@ -66,8 +71,8 @@ export default function RegisterPage() {
         alt="MyFinance Logo"
         width={250}
         height={250}
-        className=" shadow-lg rounded-full object-cover z-[9999] mt-2"
-      ></Image>
+        className="shadow-lg rounded-full object-cover z-[9999] mt-2"
+      />
       <h1 className="text-3xl xs:text-6xl font-bold text-[#1E1552] mb-8 w-full text-center z-10">
         Register
       </h1>
@@ -153,8 +158,9 @@ export default function RegisterPage() {
           <button
             type="submit"
             className="mt-4 p-3 rounded-lg bg-[#1E1552] opacity-50 text-white font-bold hover:bg-[#18123d] hover:opacity-100 transition w-full"
+            disabled={loading}
           >
-            Submit
+            {loading ? 'Registering...' : 'Submit'}
           </button>
         </form>
         <p className="text-xs text-white mt-4 opacity-70 text-center">
@@ -166,7 +172,7 @@ export default function RegisterPage() {
             Login
           </Link>
         </p>
-      </div>{' '}
+      </div>
     </main>
   );
 }
