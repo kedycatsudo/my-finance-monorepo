@@ -17,8 +17,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="gap-6 p-1 bg-[#DCDDE3]">
-        <AuthProvider>
-          <ProfileProvider>
+        <ProfileProvider>
+          <AuthProvider>
             <ThemeProvider>
               <ModalProvider>
                 <InvestmentsProvider>
@@ -34,8 +34,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </InvestmentsProvider>
               </ModalProvider>
             </ThemeProvider>
-          </ProfileProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ProfileProvider>
       </body>
     </html>
   );

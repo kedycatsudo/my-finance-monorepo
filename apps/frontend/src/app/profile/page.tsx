@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import SideBar from '@/components/SideBar';
 import { usePathname } from 'next/navigation';
 import CatchUpTheMonth from '@/components/outcomes/catchUpTheMonth';
@@ -9,7 +9,6 @@ import EditProfileModal from '@/components/modals/EditProfileModal';
 import { useProfile, ProfileProvider } from '@/context/ProfileContext';
 
 export default function ProfilePageContainer() {
-  // Ensure ProfileProvider wraps your Profile page
   return (
     <ProfileProvider>
       <Profile />
@@ -19,20 +18,8 @@ export default function ProfilePageContainer() {
 
 function Profile() {
   const pathName = usePathname();
-  const { profile, updateProfile, setProfile } = useProfile();
+  const { profile, updateProfile } = useProfile();
   const [editOpen, setEditOpen] = useState(false);
-
-  // Demo: If there's no profile yet, set dummy/default profile (normally, you'd set this from auth).
-  useEffect(() => {
-    if (!profile) {
-      setProfile({
-        username: 'demo_user',
-        email: 'demo@example.com',
-        monthlyCircleDate: '2026-05-01',
-        password: 'password123',
-      });
-    }
-  }, [profile, setProfile]);
 
   if (!profile) {
     return (
@@ -44,14 +31,17 @@ function Profile() {
 
   return (
     <main className="flex flex-col xs:flex-row min-h-screen gap-1">
-      <div className="hidden xs:flex flex-col items-center gap-5 flex-shrink-0 xs:w-64">
+      {/* Sidebar (desktop only) */}
+      <aside className="hidden xs:flex flex-col items-center gap-5 flex-shrink-0 xs:w-64">
         <SideBar
-          activePath={pathName}
+          activePath={pathName ?? undefined}
           className="hidden [@media(min-width:450px)]:flex rounded-lg ..."
         />
         {/*recently investment and miscs */}
-      </div>
-      <section className="w-full flex flex-col flex-start items-center gap-5">
+      </aside>
+
+      {/* Main Profile Section */}
+      <section className="w-full flex flex-col items-center gap-5">
         <div className="flex flex-col items-center w-full">
           <h1 className="text-3xl xs:text-6xl font-bold text-[#1E1552] text-center z-10">
             PROFILE
@@ -64,24 +54,12 @@ function Profile() {
           </button>
         </div>
         <CatchUpTheMonth
-          header="Quick Catch Up For This Month"
+          header="Profile Informations"
           items={[
-            {
-              name: 'User Name',
-              data: profile.username,
-            },
-            {
-              name: 'Email',
-              data: profile.email,
-            },
-            {
-              name: 'Monthly Circle Date',
-              data: profile.monthlyCircleDate,
-            },
-            {
-              name: 'Password',
-              data: '******',
-            },
+            { name: 'User Name', data: profile.username },
+            { name: 'Email', data: profile.email },
+            { name: 'Monthly Circle Date', data: profile.monthlyCircleDate },
+            { name: 'Password', data: '******' },
           ]}
         />
         <EditProfileModal
@@ -94,6 +72,8 @@ function Profile() {
           }}
         />
       </section>
+
+      {/* Mobile Menu (visible on small screens) */}
       <MobileMenuButton
         menuItems={[
           { href: '/dashboard', label: 'Dashboard' },

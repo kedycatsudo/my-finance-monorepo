@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User } from '@/types/user';
-
+import { ProfileProvider, useProfile } from './ProfileContext';
 type AuthContextType = {
   currentUser: User | null;
   jwt: string | null;
@@ -12,7 +12,7 @@ type AuthContextType = {
     username: string;
     email: string;
     password: string;
-    monthly_circle_date: string;
+    monthlyCircleDate: string;
   }) => Promise<{ success: boolean; message: string }>;
   isAuthenticated: boolean;
   error: string | null;
@@ -21,6 +21,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { profile, setProfile, updateProfile } = useProfile();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [jwt, setJwt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -40,6 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok && data.access_token && data.user) {
         setJwt(data.access_token);
         setCurrentUser(data.user);
+        setProfile(data.user);
+        localStorage.setItem('profile', JSON.stringify(data.user));
+        console.log('user is in the localStorage.');
         return { success: true, message: 'Login succesful' };
       }
       setError(data.message || 'Login failed');
@@ -55,19 +59,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     username,
     email,
     password,
-    monthly_circle_date,
+    monthlyCircleDate,
   }: {
     username: string;
     email: string;
     password: string;
-    monthly_circle_date?: string;
+    monthlyCircleDate?: string;
   }) {
     setError(null);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, monthly_circle_date }),
+        body: JSON.stringify({ username, email, password, monthlyCircleDate }),
       });
       const data = await res.json();
       if (res.ok && data.access_token && data.user) {
