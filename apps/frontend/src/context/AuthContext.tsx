@@ -64,17 +64,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }) {
     setError(null);
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, monthly_circle_date }),
       });
       const data = await res.json();
-      if (res.ok && data.token && data.user) {
-        setJwt(data.token);
+      if (res.ok && data.access_token && data.user) {
+        setJwt(data.access_token);
         setCurrentUser(data.user);
+
         return { success: true, message: 'Registration succesful.' };
       } else {
+        console.log(data);
         setError(data.message || 'Registration failed');
         return { success: false, message: data.message || 'Registration failed' };
       }

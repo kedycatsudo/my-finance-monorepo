@@ -9,6 +9,9 @@ export class CreateUserDto {
   email!: string;
 
   @IsString()
+  monthly_circle_date!: string;
+
+  @IsString()
   @Length(8, 72)
   // @Matches(/some-secure-pattern/, { message: 'Password too weak' }) // optional
   password!: string;

@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Post,
   Request,
@@ -8,6 +9,7 @@ import {
 import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RegisterDto } from './dto/register.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -24,5 +26,10 @@ export class AuthController {
     }
 
     return this.authService.login(user);
+  }
+  @Post('register')
+  async register(@Body() RegisterDto: RegisterDto) {
+    console.log('Register endpoint hit', RegisterDto);
+    return this.authService.register(RegisterDto);
   }
 }

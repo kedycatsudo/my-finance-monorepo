@@ -5,8 +5,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin: ['http://localhost:3000', 'http://localhost:3001'], // allow FE in local/dev
-    credentials: true, //
+    credentials: true, // if I wish to allow cookies/auth headers
   });
+  app.setGlobalPrefix('/api');
   await app.listen(3001); // ensure port differs from FE if needed
 }
 
