@@ -15,8 +15,6 @@ import EditSourceModal from '@/components/modals/EditSourceModal';
 import SourceContainer from '@/components/sourcesDetailsContainer/sourceContainer';
 import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
 import {
-  TotalIncomes,
-  PaidIncomePayments,
   TotalIncomesPaidAmount,
   RecentEarned,
   IncomesUpcoming,
