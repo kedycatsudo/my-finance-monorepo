@@ -1,5 +1,6 @@
 import './globals.css';
 import type { ReactNode } from 'react';
+import type { FinanceSourceType } from '@/types/finance';
 import Header from '@/components/Header';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -7,11 +8,7 @@ import { ModalProvider } from '@/context/ModalContext';
 import AppModal from '@/components/modals/AppModal';
 import { ProfileProvider } from '@/context/ProfileContext';
 // Import ONLY from your generic context now!
-import {
-  InvestmentsProvider,
-  IncomesProvider,
-  OutcomesProvider,
-} from '@/context/FinanceGenericContext';
+import { FinanceSourceProvider } from '@/context/FinanceSourceContext';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -21,17 +18,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AuthProvider>
             <ThemeProvider>
               <ModalProvider>
-                <InvestmentsProvider>
-                  <IncomesProvider>
-                    <OutcomesProvider>
-                      {' '}
-                      {/* spelling! */}
-                      <Header />
-                      {children}
-                      <AppModal />
-                    </OutcomesProvider>
-                  </IncomesProvider>
-                </InvestmentsProvider>
+                <FinanceSourceProvider type="default">
+                  {' '}
+                  {/* spelling! */}
+                  <Header />
+                  {children}
+                  <AppModal />
+                </FinanceSourceProvider>
               </ModalProvider>
             </ThemeProvider>
           </AuthProvider>

@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import SideBar from '@/components/SideBar';
 import RecentSideInfo from '@/components/RecentSideInfo';
@@ -9,11 +10,11 @@ import CatchUpTheMonth from '@/components/outcomes/catchUpTheMonth';
 import SourcesDetailsContainer from '@/components/sourcesDetailsContainer/sourcesDetailsContainer';
 import SourcesList from '@/components/SourcesList';
 import { usePathname } from 'next/navigation';
-import { useIncomesContext } from '@/context/FinanceGenericContext';
-import { FinanceSource, FinancePayment } from '@/types/finance';
+import { FinanceSource } from '@/types/finance';
 import EditSourceModal from '@/components/modals/EditSourceModal';
 import SourceContainer from '@/components/sourcesDetailsContainer/sourceContainer';
 import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
+import { FinanceSourceProvider, useFinanceSourceContext } from '@/context/FinanceSourceContext';
 import {
   TotalIncomesPaidAmount,
   RecentEarned,
@@ -22,40 +23,34 @@ import {
   UpcomingEarning,
   IncomeSourceList,
 } from '@/utils/functions/dataCalculations/incomesDataCalculations';
-// Helper to create a FinanceSource from base fields
+
+// Helper: create a FinanceSource from the base fields, no ID (backend should create)
 function fromSourceBaseToFinanceSource(
   base: Omit<SourceBase, 'id'> & { sourceType: 'finance' },
-  id: string,
-): FinanceSource {
+): Omit<FinanceSource, 'id'> {
   return {
     ...base,
-    id,
-    payments: [] as FinancePayment[],
+    payments: [],
     type: 'income',
   };
 }
 
-export default function Incomes() {
+function IncomesContent() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSource, setEditSource] = useState<FinanceSource | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
 
   const pathName = usePathname();
+  const { data: incomes, updateSource, addSource, loading, error } = useFinanceSourceContext();
 
-  const newSourceType: 'finance' | 'investment' =
-    pathName === '/investments' ? 'investment' : 'finance';
-  const { data: incomes, updateSource, addSource, loading, error } = useIncomesContext();
-
-  // Demo data for charts and summaries. Replace these with your real calculation utilities.
-  const totalIncomes = incomes
-    ? incomes.reduce(
-        (acc, src) => acc + src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-        0,
-      )
-    : 0;
-  const paidIncomePayments = incomes
-    ? incomes.flatMap((src) => src.payments.filter((p) => p.status === 'paid'))
-    : [];
+  // Replace with your actual utils as needed
+  const totalIncomes =
+    incomes?.reduce(
+      (acc, src) => acc + src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+      0,
+    ) ?? 0;
+  const paidIncomePayments =
+    incomes?.flatMap((src) => src.payments.filter((p) => p.status === 'paid')) ?? [];
   const totalIncomesPaidAmount = TotalIncomesPaidAmount({ data: incomes });
   const recentEarned = RecentEarned({ data: incomes });
   const incomesUpcoming = IncomesUpcoming({ data: incomes });
@@ -63,47 +58,23 @@ export default function Incomes() {
   const upcomingEarning = UpcomingEarning({ data: incomes });
   const incomesSourceList = IncomeSourceList({ data: incomes });
   const catchUptheMonth = [
-    {
-      name: 'Total Income',
-      data: totalIncomes,
-      unit: '$',
-    },
-    {
-      name: 'Payments Received',
-      data: Array.isArray(paidIncomePayments)
-        ? paidIncomePayments.length
-        : Object.values(paidIncomePayments).length,
-    },
-    {
-      name: 'Amount Received',
-      data: totalIncomesPaidAmount,
-      unit: '$',
-    },
-
+    { name: 'Total Income', data: totalIncomes, unit: '$' },
+    { name: 'Payments Received', data: paidIncomePayments.length },
+    { name: 'Amount Received', data: totalIncomesPaidAmount, unit: '$' },
     {
       name: 'Upcoming Payments',
-      data: Array.isArray(incomesUpcoming)
-        ? incomesUpcoming.length
-        : Object.values(incomesUpcoming).length,
+      data: Array.isArray(incomesUpcoming) ? incomesUpcoming.length : 0,
     },
-    {
-      name: 'Upcoming Amount',
-      data: upcomingIncomeAmount,
-      unit: '$',
-    },
-    {
-      name: 'Monthly Reset Date',
-      data: '-/01-',
-    },
+    { name: 'Upcoming Amount', data: upcomingIncomeAmount, unit: '$' },
+    { name: 'Monthly Reset Date', data: '-/01-' },
   ];
 
-  const pieDataRaw = incomes
-    ? incomes.map((src) => ({
-        name: src.sourceName,
-        amount: src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-        description: src.description,
-      }))
-    : [];
+  const pieDataRaw =
+    incomes?.map((src) => ({
+      name: src.sourceName,
+      amount: src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+      description: src.description,
+    })) ?? [];
   const pieDataWithColors = pieDataRaw.map((item, idx) => ({
     ...item,
     color: CATEGORY_COLORS[item.name] || DEFAULT_CHART_COLORS[idx % DEFAULT_CHART_COLORS.length],
@@ -116,19 +87,12 @@ export default function Incomes() {
     color: d.color,
   }));
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-  if (!incomes || incomes.length === 0) {
-    return <div>No incomes found</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!incomes || incomes.length === 0) return <div>No incomes found</div>;
 
   return (
     <main className="flex flex-col xs:flex-row min-h-screen gap-1">
-      {/* Side containers */}
       <div className="hidden xs:flex flex-col items-center gap-5 flex-shrink-0 xs:w-64">
         <SideBar
           activePath={pathName}
@@ -139,7 +103,6 @@ export default function Incomes() {
           <RecentSideInfo header="Upcoming Payment" items={upcomingEarning} />
         </div>
       </div>
-      {/* Main Content */}
       <section className="w-full flex flex-col flex-start items-center gap-5">
         <div className="flex flex-col">
           <h1 className="text-3xl xs:text-6xl font-bold text-[#1E1552] text-center z-10">
@@ -160,7 +123,6 @@ export default function Incomes() {
           <CatchUpTheMonth header="Month-to-Date Overview" items={catchUptheMonth} />
           <SourcesList header="Income Sources" items={incomesSourceList} />
         </div>
-        {/* Core fix: Pass pieDataWithColors to BOTH components */}
         <div className="pl-1 flex flex-col md:flex-row  items-center w-full gap-1">
           <PieChart data={pieDataWithColors} />
           <PieChartData header="Pie Chart Data" items={pieChartData} />
@@ -183,7 +145,6 @@ export default function Incomes() {
             )}
             onAddSource={() => setAddSourceModalOpen(true)}
           />
-
           {/* Edit existing source modal */}
           {editSource && (
             <EditSourceModal
@@ -198,15 +159,19 @@ export default function Incomes() {
               }}
             />
           )}
-
           {/* Add new source modal */}
           {addSourceModalOpen && (
             <CreateSourceModal
               open={addSourceModalOpen}
               onClose={() => setAddSourceModalOpen(false)}
               onSubmit={(fields) => {
-                const id = Date.now().toString() + Math.random().toString(36).slice(2);
-                addSource(fromSourceBaseToFinanceSource({ ...fields, sourceType: 'finance' }, id));
+                // Generate temporary ID on client; backend will replace it
+                const tempId = `temp-${Date.now()}`;
+                const newSource = fromSourceBaseToFinanceSource({
+                  ...fields,
+                  sourceType: 'finance',
+                });
+                addSource({ ...newSource, id: tempId } as FinanceSource);
                 setAddSourceModalOpen(false);
               }}
             />
@@ -224,5 +189,13 @@ export default function Incomes() {
         ]}
       />
     </main>
+  );
+}
+
+export default function Incomes() {
+  return (
+    <FinanceSourceProvider type="income">
+      <IncomesContent />
+    </FinanceSourceProvider>
   );
 }

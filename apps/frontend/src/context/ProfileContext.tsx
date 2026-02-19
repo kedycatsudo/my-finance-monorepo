@@ -19,7 +19,6 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
-  console.log('profile' + profile);
   function updateProfile(partial: Partial<Profile>) {
     setProfile((prev) => (prev ? { ...prev, ...partial } : prev));
   }

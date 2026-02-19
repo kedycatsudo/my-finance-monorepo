@@ -43,7 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentUser(data.user);
         setProfile(data.user);
         localStorage.setItem('profile', JSON.stringify(data.user));
-        console.log('user is in the localStorage.');
         return { success: true, message: 'Login succesful' };
       }
       setError(data.message || 'Login failed');
@@ -80,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return { success: true, message: 'Registration succesful.' };
       } else {
-        console.log(data);
         setError(data.message || 'Registration failed');
         return { success: false, message: data.message || 'Registration failed' };
       }
