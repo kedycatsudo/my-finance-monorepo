@@ -17,7 +17,7 @@ import { flattenInvestments, flattenPayments } from '@/utils/functions/flattenDa
 import { InvestmentItem, InvestmentSource } from '@/types/investments';
 import { FinanceSource, FinancePayment } from '@/types/finance';
 export default function Dashboard() {
-  const pathName = usePathname();
+  const pathName = usePathname() ?? '';
 
   // Get live data from generic contexts
   const { data: incomes } = useIncomesContext();
@@ -34,7 +34,8 @@ export default function Dashboard() {
     0,
   );
   const totalOutcomes = outcomes.reduce(
-    (sum:number, src:FinanceSource) => sum + src.payments.reduce((s: number, p) => s + p.amount, 0),
+    (sum: number, src: FinanceSource) =>
+      sum + src.payments.reduce((s: number, p) => s + p.amount, 0),
     0,
   );
   const totalInvested = investments.reduce(

@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import SideBar from '@/components/SideBar';
 import RecentSideInfo from '@/components/RecentSideInfo';
@@ -10,12 +9,14 @@ import CatchUpTheMonth from '@/components/outcomes/catchUpTheMonth';
 import SourcesDetailsContainer from '@/components/sourcesDetailsContainer/sourcesDetailsContainer';
 import SourcesList from '@/components/SourcesList';
 import { usePathname } from 'next/navigation';
-import { FinanceSource } from '@/types/finance';
+import { useIncomesContext } from '@/context/IncomesContext';
+import { FinanceSource, FinancePayment } from '@/types/finance';
 import EditSourceModal from '@/components/modals/EditSourceModal';
 import SourceContainer from '@/components/sourcesDetailsContainer/sourceContainer';
 import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
-import { FinanceSourceProvider, useFinanceSourceContext } from '@/context/FinanceSourceContext';
 import {
+  TotalIncomes,
+  PaidIncomePayments,
   TotalIncomesPaidAmount,
   RecentEarned,
   IncomesUpcoming,
@@ -24,31 +25,30 @@ import {
   IncomeSourceList,
 } from '@/utils/functions/dataCalculations/incomesDataCalculations';
 
-// Helper: create a FinanceSource from the base fields, no ID (backend should create)
+// Helper: create FinanceSource from SourceBase, let backend assign the ID!
 function fromSourceBaseToFinanceSource(
   base: Omit<SourceBase, 'id'> & { sourceType: 'finance' },
 ): Omit<FinanceSource, 'id'> {
   return {
     ...base,
-    payments: [],
+    payments: [] as FinancePayment[],
     type: 'income',
   };
 }
 
-function IncomesContent() {
+export default function Incomes() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSource, setEditSource] = useState<FinanceSource | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
-
   const pathName = usePathname();
-  const { data: incomes, updateSource, addSource, loading, error } = useFinanceSourceContext();
 
-  // Replace with your actual utils as needed
-  const totalIncomes =
-    incomes?.reduce(
-      (acc, src) => acc + src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-      0,
-    ) ?? 0;
+  const { data: incomes, updateSource, addSource, loading, error } = useIncomesContext();
+
+  const totalIncomes = console.log('incomes from api:', incomes);
+  incomes?.reduce(
+    (acc, src) => acc + src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+    0,
+  ) ?? 0;
   const paidIncomePayments =
     incomes?.flatMap((src) => src.payments.filter((p) => p.status === 'paid')) ?? [];
   const totalIncomesPaidAmount = TotalIncomesPaidAmount({ data: incomes });
@@ -58,14 +58,11 @@ function IncomesContent() {
   const upcomingEarning = UpcomingEarning({ data: incomes });
   const incomesSourceList = IncomeSourceList({ data: incomes });
   const catchUptheMonth = [
-    { name: 'Total Income', data: totalIncomes, unit: '$' },
-    { name: 'Payments Received', data: paidIncomePayments.length },
-    { name: 'Amount Received', data: totalIncomesPaidAmount, unit: '$' },
-    {
-      name: 'Upcoming Payments',
-      data: Array.isArray(incomesUpcoming) ? incomesUpcoming.length : 0,
-    },
-    { name: 'Upcoming Amount', data: upcomingIncomeAmount, unit: '$' },
+    { name: 'Total Income', data: totalIncomes ?? 0, unit: '$' },
+    { name: 'Payments Received', data: paidIncomePayments.length ?? 0 },
+    { name: 'Amount Received', data: totalIncomesPaidAmount ?? 0, unit: '$' },
+    { name: 'Upcoming Payments', data: incomesUpcoming.length ?? 0 },
+    { name: 'Upcoming Amount', data: upcomingIncomeAmount ?? 0, unit: '$' },
     { name: 'Monthly Reset Date', data: '-/01-' },
   ];
 
@@ -89,10 +86,10 @@ function IncomesContent() {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-  if (!incomes || incomes.length === 0) return <div>No incomes found</div>;
 
   return (
     <main className="flex flex-col xs:flex-row min-h-screen gap-1">
+      {/* Side containers */}
       <div className="hidden xs:flex flex-col items-center gap-5 flex-shrink-0 xs:w-64">
         <SideBar
           activePath={pathName}
@@ -103,6 +100,7 @@ function IncomesContent() {
           <RecentSideInfo header="Upcoming Payment" items={upcomingEarning} />
         </div>
       </div>
+      {/* Main Content */}
       <section className="w-full flex flex-col flex-start items-center gap-5">
         <div className="flex flex-col">
           <h1 className="text-3xl xs:text-6xl font-bold text-[#1E1552] text-center z-10">
@@ -123,7 +121,7 @@ function IncomesContent() {
           <CatchUpTheMonth header="Month-to-Date Overview" items={catchUptheMonth} />
           <SourcesList header="Income Sources" items={incomesSourceList} />
         </div>
-        <div className="pl-1 flex flex-col md:flex-row  items-center w-full gap-1">
+        <div className="pl-1 flex flex-col md:flex-row items-center w-full gap-1">
           <PieChart data={pieDataWithColors} />
           <PieChartData header="Pie Chart Data" items={pieChartData} />
         </div>
@@ -145,6 +143,7 @@ function IncomesContent() {
             )}
             onAddSource={() => setAddSourceModalOpen(true)}
           />
+
           {/* Edit existing source modal */}
           {editSource && (
             <EditSourceModal
@@ -159,19 +158,14 @@ function IncomesContent() {
               }}
             />
           )}
+
           {/* Add new source modal */}
           {addSourceModalOpen && (
             <CreateSourceModal
               open={addSourceModalOpen}
               onClose={() => setAddSourceModalOpen(false)}
               onSubmit={(fields) => {
-                // Generate temporary ID on client; backend will replace it
-                const tempId = `temp-${Date.now()}`;
-                const newSource = fromSourceBaseToFinanceSource({
-                  ...fields,
-                  sourceType: 'finance',
-                });
-                addSource({ ...newSource, id: tempId } as FinanceSource);
+                addSource(fromSourceBaseToFinanceSource({ ...fields, sourceType: 'finance' }));
                 setAddSourceModalOpen(false);
               }}
             />
@@ -189,13 +183,5 @@ function IncomesContent() {
         ]}
       />
     </main>
-  );
-}
-
-export default function Incomes() {
-  return (
-    <FinanceSourceProvider type="income">
-      <IncomesContent />
-    </FinanceSourceProvider>
   );
 }

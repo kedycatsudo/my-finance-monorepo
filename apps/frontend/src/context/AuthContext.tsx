@@ -32,17 +32,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
+
       const data = await res.json();
       if (res.ok && data.access_token && data.user) {
-        setJwt(data.access_token);
         setCurrentUser(data.user);
         setProfile(data.user);
         localStorage.setItem('profile', JSON.stringify(data.user));
+        localStorage.setItem('token', data.access_token); // Store JWT
         return { success: true, message: 'Login succesful' };
       }
       setError(data.message || 'Login failed');
