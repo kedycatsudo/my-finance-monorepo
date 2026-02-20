@@ -26,13 +26,10 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   // ----- Fetch incomes from API -----
   useEffect(() => {
     setLoading(true);
-    const headers: HeadersInit = {};
-    const authHeader = getAuthHeader();
-    if (authHeader.authorization) {
-      headers.authorization = authHeader.authorization;
-    }
     fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes`, {
-      headers,
+      headers: {
+        ...getAuthHeader(),
+      },
     })
       .then((res) => {
         if (!res.ok) throw new Error('Could not fetch incomes');
