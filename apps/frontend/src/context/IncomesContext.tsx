@@ -13,7 +13,7 @@ type IncomesContextType = {
 };
 
 const IncomesContext = createContext<IncomesContextType | undefined>(undefined);
-function getAuthHeader() {
+function getAuthHeader(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   return token ? { authorization: `Bearer ${token}` } : {};
 }
@@ -36,6 +36,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         return res.json();
       })
       .then((d) => {
+        console.log(d);
         setData(d);
         setLoading(false);
       })
@@ -46,14 +47,14 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  // ----- Add income -----
+  // ----- Add income-----
   const addSource = async (source: Omit<FinanceSource, 'id'>) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/incomes', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(source),
       });
       if (!res.ok) throw new Error(`Failed to add income`);
@@ -66,19 +67,23 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
     }
   };
 
-  // ----- Update income -----
+  // ----- Update income  -----
   const updateSource = async (source: FinanceSource) => {
     setLoading(true);
     setError(null);
+    console.log('Updating source:', source); // ← Add this
+    console.log('Source ID:', source.id); // ← Add this
     try {
-      const res = await fetch(`/api/incomes/${source.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes/${source.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(source),
       });
       if (!res.ok) throw new Error('Failed to update income');
+      console.log(res);
       const updated = await res.json();
-      setData((prev) => prev.map((i) => (i.id === source.id ? updated : i)));
+      console.log('updated from context:', updated);
+      setData((prev) => prev.map((i) => (i.id === source.id ? updated.updated_source : i)));
     } catch (err: any) {
       setError(err.message || 'Failed to update income');
     } finally {

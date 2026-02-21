@@ -33,6 +33,7 @@ function fromSourceBaseToFinanceSource(
     ...base,
     payments: [] as FinancePayment[],
     type: 'income',
+    name: base.sourceName,
   };
 }
 
@@ -43,31 +44,36 @@ export default function Incomes() {
   const pathName = usePathname();
 
   const { data: incomes, updateSource, addSource, loading, error } = useIncomesContext();
+  const safeIncomes = (incomes ?? []).map((income) => ({
+    ...income,
+    payments: income.payments ?? [],
+  }));
 
-  const totalIncomes = console.log('incomes from api:', incomes);
-  incomes?.reduce(
-    (acc, src) => acc + src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-    0,
-  ) ?? 0;
+  const totalIncomes =
+    safeIncomes.reduce(
+      (acc, src) => acc + src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+      0,
+    ) ?? 0;
   const paidIncomePayments =
-    incomes?.flatMap((src) => src.payments.filter((p) => p.status === 'paid')) ?? [];
-  const totalIncomesPaidAmount = TotalIncomesPaidAmount({ data: incomes });
-  const recentEarned = RecentEarned({ data: incomes });
-  const incomesUpcoming = IncomesUpcoming({ data: incomes });
-  const upcomingIncomeAmount = UpcomingIncomeAmount({ data: incomes });
-  const upcomingEarning = UpcomingEarning({ data: incomes });
-  const incomesSourceList = IncomeSourceList({ data: incomes });
+    safeIncomes.flatMap((src) => src.payments.filter((p) => p.status === 'paid')) ?? [];
+  const totalIncomesPaidAmount = TotalIncomesPaidAmount({ data: safeIncomes });
+  const recentEarned = RecentEarned({ data: safeIncomes });
+  const incomesUpcoming = IncomesUpcoming({ data: safeIncomes });
+  const upcomingPaymentsCount = Array.isArray(incomesUpcoming) ? incomesUpcoming.length : 0;
+  const upcomingIncomeAmount = UpcomingIncomeAmount({ data: safeIncomes });
+  const upcomingEarning = UpcomingEarning({ data: safeIncomes });
+  const incomesSourceList = IncomeSourceList({ data: safeIncomes });
   const catchUptheMonth = [
     { name: 'Total Income', data: totalIncomes ?? 0, unit: '$' },
     { name: 'Payments Received', data: paidIncomePayments.length ?? 0 },
     { name: 'Amount Received', data: totalIncomesPaidAmount ?? 0, unit: '$' },
-    { name: 'Upcoming Payments', data: incomesUpcoming.length ?? 0 },
+    { name: 'Upcoming Payments', data: upcomingPaymentsCount },
     { name: 'Upcoming Amount', data: upcomingIncomeAmount ?? 0, unit: '$' },
     { name: 'Monthly Reset Date', data: '-/01-' },
   ];
 
   const pieDataRaw =
-    incomes?.map((src) => ({
+    safeIncomes.map((src) => ({
       name: src.sourceName,
       amount: src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
       description: src.description,
@@ -92,7 +98,7 @@ export default function Incomes() {
       {/* Side containers */}
       <div className="hidden xs:flex flex-col items-center gap-5 flex-shrink-0 xs:w-64">
         <SideBar
-          activePath={pathName}
+          activePath={pathName ?? undefined}
           className="hidden [@media(min-width:450px)]:flex rounded-lg ..."
         />
         <div className="flex flex-row xs:flex-col relative gap-2 items-center">
@@ -109,7 +115,7 @@ export default function Incomes() {
         </div>
         <div className="w-full flex xs:hidden flex-col items-center gap-5">
           <SideBar
-            activePath={pathName}
+            activePath={pathName ?? undefined}
             className="hidden [@media(min-width:450px)]:flex rounded-lg ..."
           />
           <div className="flex flex-col w-full relative gap-1 items-center">
@@ -128,7 +134,7 @@ export default function Incomes() {
         <div className="flex flex-col w-full">
           <SourcesDetailsContainer
             header="Income Sources"
-            items={incomes}
+            items={safeIncomes}
             renderSource={(item, open, onClick, onEdit) => (
               <SourceContainer
                 key={item.id}

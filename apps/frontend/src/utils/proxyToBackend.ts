@@ -3,7 +3,7 @@ import type { NextApiRequest } from 'next';
 export async function proxyToBackend(
   req: NextApiRequest,
   backendPath: string,
-  opts: { method?: string } = {},
+  opts: { method?: string; body?: string } = {},
 ) {
   const backendUrl = process.env.NEXT_PUBLIC_API_URL + backendPath;
   const headers = new Headers();

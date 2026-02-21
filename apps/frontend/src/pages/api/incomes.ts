@@ -11,5 +11,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.status(backendRes.status);
   backendRes.headers.forEach((val, key) => res.setHeader(key, val));
   const data = await backendRes.text();
-  res.send(data);
+
+  // Transform backend response: name -> sourceName
+  const parsedData = JSON.parse(data);
+  const transformedData = Array.isArray(parsedData)
+    ? parsedData.map((item) => ({
+        ...item,
+        sourceName: item.name,
+      }))
+    : {
+        ...parsedData,
+        sourceName: parsedData.name,
+      };
+
+  res.send(JSON.stringify(transformedData));
 }

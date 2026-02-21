@@ -18,10 +18,11 @@ export class IncomesSourcesService {
     return source;
   }
   async findAll(userId: string) {
-    return this.prisma.financeSources.findMany({
+    const source = await this.prisma.financeSources.findMany({
       where: { user_id: userId, type: 'income' },
       include: { finance_payments: true },
     });
+    return source;
   }
 
   async update(userId: string, sourceId: string, dto: UpdateIncomeSourceDto) {
