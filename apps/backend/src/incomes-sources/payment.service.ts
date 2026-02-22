@@ -26,7 +26,7 @@ export class IncomesPaymentService {
         loop: dto.loop,
         status: (dto.status as $Enums.payment_status) ?? $Enums.payment_status,
         payment_type:
-          (dto.payment_type as $Enums.payment_type) ?? $Enums.payment_type,
+          (dto.payment_type as $Enums.payment_type) ?? $Enums.payment_type.cash,
         financesource_id: sourceId,
       },
     });

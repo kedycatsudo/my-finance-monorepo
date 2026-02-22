@@ -60,7 +60,7 @@ export default function Outcomes() {
   // ... prepare your summary data as usual...
 
   const pieDataRaw = outcomes.map((src) => ({
-    name: src.sourceName,
+    name: src.name,
     amount: src.payments.reduce((sum, p) => sum + p.amount, 0),
     description: src.description,
   }));
@@ -69,7 +69,7 @@ export default function Outcomes() {
     color: CATEGORY_COLORS[item.name] || DEFAULT_CHART_COLORS[idx % DEFAULT_CHART_COLORS.length],
   }));
   const pieChartData = pieDataWithColors.map((d) => ({
-    sourceName: d.name,
+    name: d.name,
     amount: d.amount,
     date: Date.now(),
     description: d.description,
@@ -93,7 +93,7 @@ export default function Outcomes() {
     <main className="flex flex-col xs:flex-row min-h-screen gap-1">
       <div className="hidden xs:flex flex-col items-center gap-5 flex-shrink-0 xs:w-64">
         <SideBar
-          activePath={pathName}
+          activePath={pathName ?? undefined}
           className="hidden [@media(min-width:450px)]:flex rounded-lg ..."
         />
         <div className="w-full flex flex-row xs:flex-col relative gap-2 items-center">
@@ -109,7 +109,7 @@ export default function Outcomes() {
         </div>
         <div className="w-full flex xs:hidden flex-col items-center gap-5">
           <SideBar
-            activePath={pathName}
+            activePath={pathName ?? undefined}
             className="hidden [@media(min-width:450px)]:flex rounded-lg ..."
           />
           <div className="w-full flex flex-col relative gap-1 items-center">

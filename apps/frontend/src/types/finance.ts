@@ -6,7 +6,7 @@ export type FinanceSourceType = 'outcome' | 'income' | 'default';
 export type FinancePayment = {
   id: string;
   name: string;
-  type: string;
+  payment_type: string;
   amount: number;
   date: string;
   loop: boolean;
@@ -16,7 +16,6 @@ export type FinancePayment = {
 export type FinanceSource = SourceBase & {
   type: FinanceSourceType;
   payments: FinancePayment[];
-  name?: string;
   // Optionally add this, or compute on the fly:
   // totalAmount?: number;
 };

@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { FinanceSource } from '@/types/finance';
+import { FinancePayment, FinanceSource } from '@/types/finance';
 
 type IncomesContextType = {
   data: FinanceSource[];
@@ -10,6 +10,7 @@ type IncomesContextType = {
   removeSource: (sourceId: string) => Promise<void>;
   loading: boolean;
   error: string | null;
+  addPayment: (sourceId: string, payment: FinancePayment) => Promise<FinancePayment | null>;
 };
 
 const IncomesContext = createContext<IncomesContextType | undefined>(undefined);
@@ -36,7 +37,6 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         return res.json();
       })
       .then((d) => {
-        console.log(d);
         setData(d);
         setLoading(false);
       })
@@ -71,8 +71,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   const updateSource = async (source: FinanceSource) => {
     setLoading(true);
     setError(null);
-    console.log('Updating source:', source); // ← Add this
-    console.log('Source ID:', source.id); // ← Add this
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes/${source.id}`, {
         method: 'PATCH',
@@ -80,9 +79,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         body: JSON.stringify(source),
       });
       if (!res.ok) throw new Error('Failed to update income');
-      console.log(res);
       const updated = await res.json();
-      console.log('updated from context:', updated);
       setData((prev) => prev.map((i) => (i.id === source.id ? updated.updated_source : i)));
     } catch (err: any) {
       setError(err.message || 'Failed to update income');
@@ -96,8 +93,9 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/incomes/${sourceId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes/${sourceId}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       });
       if (!res.ok) throw new Error('Failed to remove income');
       setData((prev) => prev.filter((i) => i.id !== sourceId));
@@ -108,9 +106,47 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
     }
   };
 
+  //---add payment---
+  const addPayment = async (
+    sourceId: string,
+    payment: FinancePayment,
+  ): Promise<FinancePayment | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes/${sourceId}/payments`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify(payment),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error('Filed to add payment');
+      }
+
+      const updatedSource = await res.json();
+      setData((prev) =>
+        prev.map((src) =>
+          src.id === sourceId ? { ...src, payments: updatedSource.payments } : src,
+        ),
+      );
+      // Return the newly created payment (it's the last one in the updated array)
+      const newPayment = updatedSource.payments?.[updatedSource.payments.length - 1] || null;
+      return newPayment;
+    } catch (error: any) {
+      setError(error.message || 'Failed to update payment');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <IncomesContext.Provider
-      value={{ data, setData, addSource, updateSource, removeSource, loading, error }}
+      value={{ data, setData, addSource, updateSource, removeSource, loading, error, addPayment }}
     >
       {children}
     </IncomesContext.Provider>

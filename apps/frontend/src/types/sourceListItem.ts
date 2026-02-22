@@ -1,5 +1,5 @@
 export type SourceListItem = {
-  sourceName: string;
+  name: string;
   amount: number;
   unit?: string;
 };

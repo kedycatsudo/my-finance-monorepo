@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FinanceSource } from '@/types/finance';
+import { FinancePayment, FinanceSource } from '@/types/finance';
 import { InvestmentSource } from '@/types/investments';
 import { PAYMENT_FIELDS, ITEM_FIELDS } from '@/constants/fieldConfig';
 import FieldInput from '../forms/FieldInput';
 import AccordionItem from '../forms/AccordionItem';
 import { isFinanceSource, isInvestmentSource } from '@/utils/functions/typeGuard';
-import AppModal from './AppModal';
 import AddInvestmentItemModal from './AddInvestmentItem';
 import AddPaymentModal from './AddFinanceItem';
 type EditSourceModalProps = {
@@ -15,6 +14,7 @@ type EditSourceModalProps = {
   source: FinanceSource | InvestmentSource;
   onClose: () => void;
   onSubmit: (updated: FinanceSource | InvestmentSource) => void;
+  onClick: (updated: FinanceSource | InvestmentSource) => void;
 };
 
 export default function EditSourceModal({ open, source, onClose, onSubmit }: EditSourceModalProps) {
@@ -44,7 +44,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const handleSourceInput = (field: string, value: any) => {
     setLocalSource((prev) => ({ ...prev, [field]: value }) as any);
   };
-
+  const onClick = {};
   const handleItemInput = (itemId: string, field: any, value: any) => {
     const arrKey = isFinanceSource(localSource) ? 'payments' : 'items';
     setLocalSource(
@@ -60,7 +60,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
 
   function validate() {
     const err: Record<string, string> = {};
-    if (!localSource.sourceName?.trim()) err.sourceName = 'Source name required';
+    if (!localSource.name?.trim()) err.name = 'Source name required';
 
     if (isFinanceSource(localSource)) {
       for (const payment of localSource.payments ?? []) {
@@ -90,9 +90,9 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const sourceFields = [
     {
       label: ' Source Name',
-      field: 'sourceName',
-      value: localSource.sourceName,
-      err: errors.sourceName,
+      field: 'name',
+      value: localSource.name,
+      err: errors.name,
     },
     ...(localSource.description !== undefined
       ? [{ label: 'Description', field: 'description', value: localSource.description }]
@@ -110,7 +110,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
       >
         <div className="overflow-y-auto flex-1 gap-3 flex flex-col">
           <h2 className="text-2xl font-bold mb-2 text-[#29388A] text-center">
-            Edit {localSource.sourceName}
+            Edit {localSource.name}
           </h2>
           <div className="flex flex-col gap-2 mb-4">
             {sourceFields.map((f) => (
@@ -176,13 +176,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
             <AddPaymentModal
               open={showAddPaymentModal}
               onClose={() => setShowAddPaymentModal(false)}
-              onSubmit={(newPayment) => {
-                setLocalSource((prev) =>
-                  isFinanceSource(prev)
-                    ? { ...prev, payments: [...(prev.payments ?? []), newPayment] }
-                    : prev,
-                );
-              }}
+              sourceId={localSource.id}
             />
           </>
         )}
@@ -222,7 +216,6 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
             Submit
           </button>
         </div>
-        {showAppModal && <AppModal />}
       </div>
     </div>
   );

@@ -33,7 +33,6 @@ function fromSourceBaseToFinanceSource(
     ...base,
     payments: [] as FinancePayment[],
     type: 'income',
-    name: base.sourceName,
   };
 }
 
@@ -74,7 +73,7 @@ export default function Incomes() {
 
   const pieDataRaw =
     safeIncomes.map((src) => ({
-      name: src.sourceName,
+      name: src.name,
       amount: src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
       description: src.description,
     })) ?? [];
@@ -83,7 +82,7 @@ export default function Incomes() {
     color: CATEGORY_COLORS[item.name] || DEFAULT_CHART_COLORS[idx % DEFAULT_CHART_COLORS.length],
   }));
   const pieChartData = pieDataWithColors.map((d) => ({
-    sourceName: d.name,
+    name: d.name,
     amount: d.amount,
     date: Date.now(),
     description: d.description,

@@ -38,7 +38,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     // Await async register
-    const res = await register({ username, email, monthly_circle_date: monthlyCircleDate, password });
+    const res = await register({ username, email, monthlyCircleDate, password });
     setLoading(false);
 
     // Handle per-field errors if provided

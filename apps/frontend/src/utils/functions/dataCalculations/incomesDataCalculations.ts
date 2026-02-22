@@ -53,7 +53,7 @@ export function UpcomingIncomeAmount({ data }: DataCalculationProps): number {
 }
 export function IncomeSourceList({ data }: DataCalculationProps): SourceListItem[] {
   return data.map((d) => ({
-    sourceName: d.sourceName,
+    name: d.name,
     amount: d.payments.reduce((sum, p) => sum + p.amount, 0),
     unit: '$',
   }));

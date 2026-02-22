@@ -59,7 +59,7 @@ export default function Dashboard() {
 
   // Pie chart data legend
   const pieChartData = pieDataWithColors.map((d) => ({
-    sourceName: d.name,
+    name: d.name,
     amount: d.amount,
     date: Date.now(),
     color: d.color,
@@ -108,7 +108,7 @@ export default function Dashboard() {
     .filter((item) => item.status === 'closed')
     .slice(0, 5)
     .map((item) => ({
-      name: `${item.sourceName}: ${item.assetName}`,
+      name: `${item.name}: ${item.assetName}`,
       data: Number(item.investedAmount ?? 0),
       date: item.entryDate || '',
       unit: '$',
@@ -117,7 +117,7 @@ export default function Dashboard() {
     .filter((item) => item.status === 'open')
     .slice(0, 5)
     .map((item) => ({
-      name: `${item.sourceName}: ${item.assetName}`,
+      name: `${item.name}: ${item.assetName}`,
       data: Number(item.investedAmount ?? 0),
       date: item.entryDate || '',
       unit: '$',

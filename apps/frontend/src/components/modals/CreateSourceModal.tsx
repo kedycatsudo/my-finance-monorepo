@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 export type SourceBase = {
   id: string;
-  sourceName: string;
+  name: string;
   description?: string;
   date?: string;
 };
@@ -16,7 +16,7 @@ type Props = {
 
 export default function CreateSourceModal({ open, onClose, onSubmit }: Props) {
   const [fields, setFields] = useState<Omit<SourceBase, 'id'>>({
-    sourceName: '',
+    name: '',
     description: '',
     date: '',
   });
@@ -24,7 +24,7 @@ export default function CreateSourceModal({ open, onClose, onSubmit }: Props) {
 
   useEffect(() => {
     if (open) {
-      setFields({ sourceName: '', description: '', date: '' });
+      setFields({ name: '', description: '', date: '' });
       setError('');
     }
   }, [open]);
@@ -37,7 +37,7 @@ export default function CreateSourceModal({ open, onClose, onSubmit }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!fields.sourceName.trim()) {
+    if (!fields.name.trim()) {
       setError('Source Name is required');
       return;
     }
@@ -53,8 +53,8 @@ export default function CreateSourceModal({ open, onClose, onSubmit }: Props) {
             <span className="block">Source Name*</span>
             <input
               type="text"
-              value={fields.sourceName}
-              onChange={(e) => handleChange('sourceName', e.target.value)}
+              value={fields.name}
+              onChange={(e) => handleChange('name', e.target.value)}
               required
               className="rounded border px-2 py-1 mt-1 w-full text-black"
             />

@@ -20,7 +20,7 @@ export default function PaymentsContainer({ payment, open, onClick }: PaymentsCo
   // Define field labels for both types
   const financeFieldLabels: { [K in keyof FinancePayment]?: string } = {
     name: 'Name',
-    type: 'Type',
+    payment_type: 'Type',
     amount: 'Amount',
     date: 'Date',
     loop: 'Loop',

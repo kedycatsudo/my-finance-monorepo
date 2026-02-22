@@ -3,7 +3,7 @@ import React from 'react';
 import TotalRow from './TotalRow';
 // import { CATEGORY_COLORS, DEFAULT_CHART_COLORS } from '@/utils/chartColors';
 type FinancialItem = {
-  sourceName: string;
+  name: string;
   amount: number;
   date?: number | string;
   color?: string;
@@ -28,10 +28,10 @@ export default function PieChartData({ header, items, className }: InOutSnapshot
       <div className="w-full h-1 mb-0.5 bg-[#29388A] rounded" />
       <div className="w-full">
         {items.map((item, idx) => (
-          <React.Fragment key={item.sourceName + '-' + item.amount}>
+          <React.Fragment key={item.name + '-' + item.amount}>
             <div className="flex flex-row justify-between items-center py-2 gap-1">
               <div className="flex gap-1 items-center">
-                <span className="text-white text-s xs:text-xl">{item.sourceName}</span>
+                <span className="text-white text-s xs:text-xl">{item.name}</span>
                 <span
                   style={{
                     display: 'inline-block',

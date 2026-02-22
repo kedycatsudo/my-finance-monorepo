@@ -20,7 +20,7 @@ function mapPaymentFromBackend(src: any): FinancePayment {
   return {
     id: src.id,
     name: src.name,
-    type: src.payment_type,
+    payment_type: src.payment_type,
     amount: parseFloat(src.amount || '0'),
     date: src.payments_circle_date || '',
     loop: !!src.loop,
@@ -30,7 +30,7 @@ function mapPaymentFromBackend(src: any): FinancePayment {
 function mapSourceFromBackend(src: any): FinanceSource {
   return {
     id: src.id,
-    sourceName: src.name ?? '',
+    name: src.name ?? '',
     type: src.type,
     date: src.created_at,
     description: src.decription,
@@ -43,7 +43,7 @@ function mapPaymentToBackend(payment: FinancePayment): any {
   return {
     id: payment.id,
     name: payment.name,
-    payment_type: payment.type,
+    payment_type: payment.payment_type,
     amount: payment.amount,
     payment_circle_date: payment.date,
     loop: !!payment.loop,
@@ -54,7 +54,7 @@ function mapPaymentToBackend(payment: FinancePayment): any {
 function mapSourceToBackend(src: FinanceSource): any {
   return {
     id: src.id,
-    name: src.sourceName,
+    name: src.name,
     type: src.type,
     created_at: src.date,
     description: src.description,

@@ -17,7 +17,7 @@ export async function proxyToBackend(
     headers,
     // Only set body for these verbs
     body: ['POST', 'PUT', 'PATCH'].includes((opts.method || req.method)!.toUpperCase())
-      ? JSON.stringify(req.body)
+      ? (opts.body ?? JSON.stringify(req.body))
       : undefined,
   });
   return res;

@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 import { FinancePayment } from '@/types/finance';
 import { PAYMENT_FIELDS } from '@/constants/fieldConfig';
 import FieldInput from '../forms/FieldInput';
-
+import { useIncomesContext } from '@/context/IncomesContext';
+import { useModal } from '@/context/ModalContext';
 type AddPaymentModalProps = {
   open: boolean;
+  sourceId: string; // NEW: pass the source id where payment is being added
   onClose: () => void;
-  onSubmit: (payment: FinancePayment) => void;
 };
-
 function makeBlankPayment(): FinancePayment {
   return {
     id: Date.now().toString() + Math.random().toString(36).slice(2),
     name: '',
-    type: '',
+    payment_type: '',
     amount: 0,
     date: '',
     loop: false,
@@ -23,9 +23,11 @@ function makeBlankPayment(): FinancePayment {
   };
 }
 
-export default function AddPaymentModal({ open, onClose, onSubmit }: AddPaymentModalProps) {
+export default function AddPaymentModal({ open, onClose, sourceId }: AddPaymentModalProps) {
   const [form, setForm] = useState<FinancePayment>(makeBlankPayment());
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
+  const { addPayment, loading, error } = useIncomesContext();
+  const { showModal } = useModal();
 
   useEffect(() => {
     if (open) {
@@ -41,17 +43,21 @@ export default function AddPaymentModal({ open, onClose, onSubmit }: AddPaymentM
   function validate() {
     const err: typeof errors = {};
     if (!form.name) err.name = 'Name required';
-    if (!form.type) err.type = 'Type required';
+    if (!form.payment_type) err.payment_type = 'Type required';
     if (form.amount == null) err.amount = 'Amount required';
     if (!form.date) err.date = 'Date required';
     setErrors(err);
     return Object.keys(err).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (validate()) {
-      onSubmit(form);
+      // Use context's addPayment for API then state update
+      const newPayment = await addPayment(sourceId, form);
+      if (newPayment) {
+        showModal('Payment added succesfully.');
+      }
       onClose();
     }
   }
@@ -74,19 +80,22 @@ export default function AddPaymentModal({ open, onClose, onSubmit }: AddPaymentM
               err={errors[f.field]}
             />
           ))}
+          {error && <div className="text-red-600 text-center">{error}</div>}
           <div className="flex justify-center gap-2 mt-4">
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
+              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="px-4 py-2 rounded bg-[#29388A] text-white hover:bg-blue-800 font-semibold"
+              disabled={loading}
             >
-              Submit
+              {loading ? 'Adding...' : 'Submit'}
             </button>
           </div>
         </form>

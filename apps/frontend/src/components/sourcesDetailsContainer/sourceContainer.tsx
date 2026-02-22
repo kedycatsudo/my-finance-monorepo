@@ -33,7 +33,7 @@ export default function SourceContainer({ item, open, onClick, onEdit }: SourceC
 
   if (isFinanceSource(item)) {
     // For incomes/outcomes
-    title = item.sourceName;
+    title = item.name;
     datasInfo = [
       { id: 1, infoPair: 'Description', data: item.description ?? '' },
       {
@@ -65,7 +65,7 @@ export default function SourceContainer({ item, open, onClick, onEdit }: SourceC
     dataPayments = item.payments;
   } else if (isInvestmentSource(item)) {
     // For investments
-    title = item.sourceName ?? '';
+    title = item.name ?? '';
     datasInfo = [
       { id: 1, infoPair: 'Description', data: item.description ?? '' },
       {
