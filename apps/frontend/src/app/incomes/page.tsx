@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SideBar from '@/components/SideBar';
 import RecentSideInfo from '@/components/RecentSideInfo';
 import MobileMenuButton from '@/components/MobileBurgerMenu';
@@ -15,8 +15,6 @@ import EditSourceModal from '@/components/modals/EditSourceModal';
 import SourceContainer from '@/components/sourcesDetailsContainer/sourceContainer';
 import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
 import {
-  TotalIncomes,
-  PaidIncomePayments,
   TotalIncomesPaidAmount,
   RecentEarned,
   IncomesUpcoming,
@@ -24,44 +22,52 @@ import {
   UpcomingEarning,
   IncomeSourceList,
 } from '@/utils/functions/dataCalculations/incomesDataCalculations';
-
+import { useModal } from '@/context/ModalContext';
 // Helper: create FinanceSource from SourceBase, let backend assign the ID!
 function fromSourceBaseToFinanceSource(
   base: Omit<SourceBase, 'id'> & { sourceType: 'finance' },
 ): Omit<FinanceSource, 'id'> {
   return {
     ...base,
-    payments: [] as FinancePayment[],
+    finance_payments: [] as FinancePayment[],
     type: 'income',
   };
 }
 
 export default function Incomes() {
+  const { showModal } = useModal();
+  const {
+    data: incomes,
+    updateSource,
+    addSource,
+    loading,
+    error,
+    updatePayment,
+  } = useIncomesContext();
+  useEffect(() => {}, [incomes]); // This runs every time incomes changes
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSource, setEditSource] = useState<FinanceSource | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
   const pathName = usePathname();
 
-  const { data: incomes, updateSource, addSource, loading, error } = useIncomesContext();
-  const safeIncomes = (incomes ?? []).map((income) => ({
-    ...income,
-    payments: income.payments ?? [],
-  }));
-
-  const totalIncomes =
-    safeIncomes.reduce(
-      (acc, src) => acc + src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
-      0,
-    ) ?? 0;
+  const totalIncomes = (incomes ?? []).reduce((acc, src) => {
+    const payments = Array.isArray(src?.finance_payments) ? src.finance_payments : [];
+    const sourceTotal = payments.reduce((sum, p) => sum + (p?.amount || 0), 0);
+    return acc + sourceTotal;
+  }, 0);
   const paidIncomePayments =
-    safeIncomes.flatMap((src) => src.payments.filter((p) => p.status === 'paid')) ?? [];
-  const totalIncomesPaidAmount = TotalIncomesPaidAmount({ data: safeIncomes });
-  const recentEarned = RecentEarned({ data: safeIncomes });
-  const incomesUpcoming = IncomesUpcoming({ data: safeIncomes });
+    (incomes ?? []).filter((src) => {
+      const payments = Array.isArray(src?.finance_payments) ? src.finance_payments : [];
+      const paidPayments = payments.filter((p) => p.status === 'paid');
+      return paidPayments;
+    }) ?? [];
+  const totalIncomesPaidAmount = TotalIncomesPaidAmount({ data: incomes });
+  const recentEarned = RecentEarned({ data: incomes });
+  const incomesUpcoming = IncomesUpcoming({ data: incomes });
   const upcomingPaymentsCount = Array.isArray(incomesUpcoming) ? incomesUpcoming.length : 0;
-  const upcomingIncomeAmount = UpcomingIncomeAmount({ data: safeIncomes });
-  const upcomingEarning = UpcomingEarning({ data: safeIncomes });
-  const incomesSourceList = IncomeSourceList({ data: safeIncomes });
+  const upcomingIncomeAmount = UpcomingIncomeAmount({ data: incomes });
+  const upcomingEarning = UpcomingEarning({ data: incomes });
+  const incomesSourceList = IncomeSourceList({ data: incomes });
   const catchUptheMonth = [
     { name: 'Total Income', data: totalIncomes ?? 0, unit: '$' },
     { name: 'Payments Received', data: paidIncomePayments.length ?? 0 },
@@ -72,9 +78,12 @@ export default function Incomes() {
   ];
 
   const pieDataRaw =
-    safeIncomes.map((src) => ({
+    incomes.map((src) => ({
       name: src.name,
-      amount: src.payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+      amount: (Array.isArray(src?.finance_payments) ? src.finance_payments : []).reduce(
+        (sum, p) => sum + (p?.amount || 0),
+        0,
+      ),
       description: src.description,
     })) ?? [];
   const pieDataWithColors = pieDataRaw.map((item, idx) => ({
@@ -133,7 +142,7 @@ export default function Incomes() {
         <div className="flex flex-col w-full">
           <SourcesDetailsContainer
             header="Income Sources"
-            items={safeIncomes}
+            items={incomes}
             renderSource={(item, open, onClick, onEdit) => (
               <SourceContainer
                 key={item.id}
@@ -155,11 +164,16 @@ export default function Incomes() {
               open={editModalOpen}
               source={editSource}
               onClose={() => setEditModalOpen(false)}
-              onSubmit={(updatedSource) => {
-                if ('payments' in updatedSource) {
-                  updateSource(updatedSource);
+              onSubmit={async (updatedSource) => {
+                if ('finance_payments' in updatedSource) {
+                  {
+                    await updateSource(updatedSource);
+
+                    for (const payment of updatedSource.finance_payments) {
+                      await updatePayment(updatedSource.id, payment.id, payment);
+                    }
+                  }
                 }
-                setEditModalOpen(false);
               }}
             />
           )}

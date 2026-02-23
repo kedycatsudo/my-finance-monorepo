@@ -17,8 +17,7 @@ export class IncomesPaymentService {
       where: { id: sourceId, user_id: userId, type: 'income' },
     });
     if (!source) throw new Error('Source not found or unauthorized.');
-
-    return this.prisma.financePayments.create({
+    const newPayment = await this.prisma.financePayments.create({
       data: {
         name: dto.name,
         user_id: userId,
@@ -26,10 +25,13 @@ export class IncomesPaymentService {
         loop: dto.loop,
         status: (dto.status as $Enums.payment_status) ?? $Enums.payment_status,
         payment_type:
-          (dto.payment_type as $Enums.payment_type) ?? $Enums.payment_type.cash,
+          (dto.payment_type as $Enums.payment_type) ??
+          $Enums.payment_type.credit,
         financesource_id: sourceId,
       },
     });
+    console.log('new payment after created from payment service', newPayment);
+    return newPayment;
   }
 
   async findAll(userId: string) {
@@ -49,6 +51,7 @@ export class IncomesPaymentService {
       where: { id: paymentId },
       include: { finance_sources: true },
     });
+
     if (
       !payment ||
       payment.user_id !== userId ||
@@ -67,6 +70,7 @@ export class IncomesPaymentService {
     if (dto.status !== undefined)
       updateData.status = dto.status as $Enums.payment_status;
     updateData.financesource_id = sourceId;
+
     return this.prisma.financePayments.update({
       where: { id: paymentId },
       data: updateData,

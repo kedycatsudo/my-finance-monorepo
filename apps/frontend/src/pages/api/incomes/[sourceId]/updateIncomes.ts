@@ -2,27 +2,19 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { proxyToBackend } from '@/utils/proxyToBackend';
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { sourceId } = req.query;
-  console.log('req body', req.body);
-  let backendPath = '/api/incomes/sources';
+  let backendPath = `/api/incomes/sources`;
   if (req.method === 'PATCH' || req.method === 'DELETE') {
-    if (!sourceId || Array.isArray(sourceId)) {
-      return res.status(400).json({ message: 'sourceId is required' });
-    }
     backendPath += `/${sourceId}`;
   }
 
   const backendRes = await proxyToBackend(req, backendPath, {
     method: req.method,
-    body: ['POST', 'PUT', 'PATCH'].includes((req.method || 'GET').toUpperCase())
-      ? JSON.stringify(req.body)
-      : undefined,
+    body: JSON.stringify(req.body),
   });
   res.status(backendRes.status);
   backendRes.headers.forEach((val, key) => res.setHeader(key, val));
   const data = await backendRes.json();
-
-  return res.send(data);
+  return data;
 }

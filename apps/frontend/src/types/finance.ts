@@ -15,7 +15,7 @@ export type FinancePayment = {
 
 export type FinanceSource = SourceBase & {
   type: FinanceSourceType;
-  payments: FinancePayment[];
+  finance_payments: FinancePayment[];
   // Optionally add this, or compute on the fly:
   // totalAmount?: number;
 };

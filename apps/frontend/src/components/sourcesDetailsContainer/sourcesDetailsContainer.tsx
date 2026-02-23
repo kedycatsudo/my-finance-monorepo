@@ -20,7 +20,6 @@ export default function SourcesDetailsContainer<T extends { id: string }>({
   onAddSource,
 }: SourcesDetailsContainerProps<T>) {
   const [openSources, setOpenSources] = useState<{ [id: string]: boolean }>({});
-
   return (
     <div className="flex flex-col rounded bg-[#989899] opacity-75 items-center gap-2 px-1">
       <h1 className="text-2xl xs:text-3xl text-[#29388A] font-bold">{header}</h1>

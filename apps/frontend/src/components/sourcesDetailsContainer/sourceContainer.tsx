@@ -17,7 +17,7 @@ type SourceContainerProps = {
 
 // Type guards for discriminated union
 function isFinanceSource(a: FinanceSource | InvestmentSource): a is FinanceSource {
-  return 'payments' in a;
+  return 'finance_payments' in a;
 }
 function isInvestmentSource(a: FinanceSource | InvestmentSource): a is InvestmentSource {
   return 'items' in a;
@@ -30,7 +30,6 @@ export default function SourceContainer({ item, open, onClick, onEdit }: SourceC
   let datasInfo: { id: number; infoPair: string; data: string | number }[] = [];
   let dataPayments: (FinancePayment | InvestmentItem)[] = [];
   let title: string = '';
-
   if (isFinanceSource(item)) {
     // For incomes/outcomes
     title = item.name;
@@ -39,17 +38,15 @@ export default function SourceContainer({ item, open, onClick, onEdit }: SourceC
       {
         id: 2,
         infoPair: 'Monthly Recurring Amount',
-        data:
-          item.payments
-            .filter((p) => p.loop)
-            .reduce((sum, p) => sum + p.amount, 0)
-            .toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
+        data: (Array.isArray(item?.finance_payments) ? item.finance_payments : [])
+          .filter((p) => p.loop)
+          .reduce((sum, p) => sum + p.amount, 0),
       },
       {
         id: 3,
         infoPair: 'Current amount for this month',
         data:
-          item.payments
+          (Array.isArray(item?.finance_payments) ? item.finance_payments : [])
             .reduce((sum, p) => sum + p.amount, 0)
             .toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
       },
@@ -58,11 +55,14 @@ export default function SourceContainer({ item, open, onClick, onEdit }: SourceC
         infoPair: 'Avg monthly total payment',
         data:
           (
-            item.payments.reduce((sum, p) => sum + p.amount, 0) / (item.payments.length || 1)
+            (Array.isArray(item?.finance_payments) ? item.finance_payments : []).reduce(
+              (sum, p) => sum + p.amount,
+              0,
+            ) / ((Array.isArray(item?.finance_payments) ? item.finance_payments : []).length || 1)
           ).toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
       },
     ];
-    dataPayments = item.payments;
+    dataPayments = item.finance_payments;
   } else if (isInvestmentSource(item)) {
     // For investments
     title = item.name ?? '';

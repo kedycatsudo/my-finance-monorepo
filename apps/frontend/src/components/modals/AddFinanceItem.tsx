@@ -10,6 +10,7 @@ type AddPaymentModalProps = {
   open: boolean;
   sourceId: string; // NEW: pass the source id where payment is being added
   onClose: () => void;
+  onPaymentAdded?: () => void; // Callback after successful payment add
 };
 function makeBlankPayment(): FinancePayment {
   return {
@@ -23,7 +24,12 @@ function makeBlankPayment(): FinancePayment {
   };
 }
 
-export default function AddPaymentModal({ open, onClose, sourceId }: AddPaymentModalProps) {
+export default function AddPaymentModal({
+  open,
+  onClose,
+  sourceId,
+  onPaymentAdded,
+}: AddPaymentModalProps) {
   const [form, setForm] = useState<FinancePayment>(makeBlankPayment());
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const { addPayment, loading, error } = useIncomesContext();
@@ -55,9 +61,13 @@ export default function AddPaymentModal({ open, onClose, sourceId }: AddPaymentM
     if (validate()) {
       // Use context's addPayment for API then state update
       const newPayment = await addPayment(sourceId, form);
+      console.log(newPayment);
+
       if (newPayment) {
-        showModal('Payment added succesfully.');
+        console.log(newPayment);
+        onPaymentAdded?.(); // ← Call the callback to notify parent
       }
+      showModal('Payment added succesfully.');
       onClose();
     }
   }

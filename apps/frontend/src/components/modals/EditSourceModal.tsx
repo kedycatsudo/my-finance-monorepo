@@ -9,12 +9,12 @@ import AccordionItem from '../forms/AccordionItem';
 import { isFinanceSource, isInvestmentSource } from '@/utils/functions/typeGuard';
 import AddInvestmentItemModal from './AddInvestmentItem';
 import AddPaymentModal from './AddFinanceItem';
+import { useIncomesContext } from '@/context/IncomesContext';
 type EditSourceModalProps = {
   open: boolean;
   source: FinanceSource | InvestmentSource;
   onClose: () => void;
   onSubmit: (updated: FinanceSource | InvestmentSource) => void;
-  onClick: (updated: FinanceSource | InvestmentSource) => void;
 };
 
 export default function EditSourceModal({ open, source, onClose, onSubmit }: EditSourceModalProps) {
@@ -24,6 +24,16 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const [showAppModal, setShowAppModal] = useState<boolean | null>(null);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showAddInvestmentItemModal, setShowAddInvestmentItemModal] = useState(false);
+  const { data: incomesData } = useIncomesContext();
+
+  // Sync localSource when payment is added
+  const handlePaymentAdded = () => {
+    const updatedSource = incomesData.find((src) => src.id === localSource.id);
+    console.log('updated Source on editSoruceModal', updatedSource);
+    if (updatedSource) {
+      setLocalSource(updatedSource);
+    }
+  };
 
   useEffect(() => {
     setLocalSource(source);
@@ -44,9 +54,8 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const handleSourceInput = (field: string, value: any) => {
     setLocalSource((prev) => ({ ...prev, [field]: value }) as any);
   };
-  const onClick = {};
-  const handleItemInput = (itemId: string, field: any, value: any) => {
-    const arrKey = isFinanceSource(localSource) ? 'payments' : 'items';
+  const handleItemInput = (itemId: string, field: any, value: string) => {
+    const arrKey = isFinanceSource(localSource) ? 'finance_payments' : 'items';
     setLocalSource(
       (prev) =>
         ({
@@ -63,7 +72,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
     if (!localSource.name?.trim()) err.name = 'Source name required';
 
     if (isFinanceSource(localSource)) {
-      for (const payment of localSource.payments ?? []) {
+      for (const payment of localSource.finance_payments ?? []) {
         if ('name' in payment && typeof payment.name === 'string' && !payment.name?.trim()) {
           err[`payment.${payment.id}.name`] = 'Name is required';
         }
@@ -126,8 +135,8 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
           </div>
           {/* items grid */}
           {isFinanceSource(localSource) &&
-            localSource.payments &&
-            localSource.payments.map((payment) => (
+            localSource.finance_payments &&
+            localSource.finance_payments.map((payment) => (
               <AccordionItem
                 key={payment.id}
                 item={payment}
@@ -177,6 +186,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
               open={showAddPaymentModal}
               onClose={() => setShowAddPaymentModal(false)}
               sourceId={localSource.id}
+              onPaymentAdded={handlePaymentAdded}
             />
           </>
         )}

@@ -1,4 +1,4 @@
-import { FinanceSource } from '@/types/finance';
+import { FinancePayment, FinanceSource } from '@/types/finance';
 import type { RecentSideInfoItem } from '@/types/financeRecentSideInfoItem';
 import { SourceListItem } from '@/types/sourceListItem';
 type DataCalculationProps = {
@@ -8,21 +8,36 @@ type DataCalculationProps = {
 // incomes calculations
 
 export function TotalIncomes({ data }: DataCalculationProps): number {
-  return data.reduce((sum, src) => sum + src.payments.reduce((s, p) => s + p.amount, 0), 0);
+  return data.reduce(
+    (sum, src) =>
+      sum +
+      (Array.isArray(src?.finance_payments) ? src.finance_payments : []).reduce(
+        (s, p) => s + (p?.amount || 0),
+        0,
+      ),
+    0,
+  );
 }
-export function TotalIncomesPaidAmount({ data }: DataCalculationProps): number {
-  return data
-    .flatMap((income) => income.payments)
+export function TotalIncomesPaidAmount({ data }: DataCalculationProps) {
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
+    .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'paid')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .reduce((sum, payment) => sum + (payment.amount || 0), 0);
 }
-
 export function PaidIncomePayments({ data }: DataCalculationProps): object {
-  return data.flatMap((income) => income.payments).filter((payment) => payment.status === 'paid');
+  return data
+    .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
+    .filter((payment): payment is FinancePayment => Boolean(payment))
+    .filter((payment) => payment.status === 'paid');
 }
 export function RecentEarned({ data }: DataCalculationProps): RecentSideInfoItem[] {
-  return data
-    .flatMap((income) => income.payments)
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+
+  return sources
+    .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
+    .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'paid')
     .map((p) => ({
       name: p.name,
@@ -32,8 +47,10 @@ export function RecentEarned({ data }: DataCalculationProps): RecentSideInfoItem
     }));
 }
 export function UpcomingEarning({ data }: DataCalculationProps): RecentSideInfoItem[] {
-  return data
-    .flatMap((income) => income.payments)
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
+    .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'coming')
     .map((p) => ({
       name: p.name,
@@ -43,18 +60,27 @@ export function UpcomingEarning({ data }: DataCalculationProps): RecentSideInfoI
     }));
 }
 export function IncomesUpcoming({ data }: DataCalculationProps): object {
-  return data.flatMap((income) => income.payments).filter((payment) => payment.status === 'coming');
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
+    .filter((payment): payment is FinancePayment => Boolean(payment))
+    .filter((payment) => payment.status === 'coming');
 }
 export function UpcomingIncomeAmount({ data }: DataCalculationProps): number {
-  return data
-    .flatMap((income) => income.payments)
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
+    .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'coming')
     .reduce((sum, payment) => sum + payment.amount, 0);
 }
 export function IncomeSourceList({ data }: DataCalculationProps): SourceListItem[] {
   return data.map((d) => ({
     name: d.name,
-    amount: d.payments.reduce((sum, p) => sum + p.amount, 0),
+    amount: (Array.isArray(d?.finance_payments) ? d.finance_payments : []).reduce(
+      (sum, p) => sum + (p?.amount || 0),
+      0,
+    ),
     unit: '$',
   }));
 }
