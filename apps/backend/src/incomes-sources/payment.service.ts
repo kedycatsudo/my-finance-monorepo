@@ -8,6 +8,32 @@ import { UpdateIncomePaymentDto } from './dto/update-income-payment.dto';
 export class IncomesPaymentService {
   constructor(private prisma: PrismaService) {}
 
+  private normalizePaymentCircleDate(
+    value?: string | Date | null,
+  ): Date | null | undefined {
+    if (value === undefined) return undefined; // not provided (update flow)
+    if (value === null || value === '') return null; // explicit clear
+    if (value instanceof Date) return value;
+
+    const str = String(value).trim();
+
+    // If already full ISO/date-time, parse directly
+    if (str.includes('T')) {
+      const isoDate = new Date(str);
+      if (Number.isNaN(isoDate.getTime())) {
+        throw new Error('Invalid payment_circle_date format');
+      }
+      return isoDate;
+    }
+
+    // Date-only (YYYY-MM-DD) -> midnight UTC
+    const dateOnly = new Date(`${str}T00:00:00.000Z`);
+    if (Number.isNaN(dateOnly.getTime())) {
+      throw new Error('Invalid payment_circle_date format');
+    }
+    return dateOnly;
+  }
+
   async createPayment(
     userId: string,
     sourceId: string,
@@ -16,6 +42,9 @@ export class IncomesPaymentService {
     const source = await this.prisma.financeSources.findFirst({
       where: { id: sourceId, user_id: userId, type: 'income' },
     });
+    const normalizedPaymentCircleDate = this.normalizePaymentCircleDate(
+      dto.payment_circle_date,
+    );
     if (!source) throw new Error('Source not found or unauthorized.');
     const newPayment = await this.prisma.financePayments.create({
       data: {
@@ -28,6 +57,7 @@ export class IncomesPaymentService {
           (dto.payment_type as $Enums.payment_type) ??
           $Enums.payment_type.credit,
         financesource_id: sourceId,
+        payment_circle_date: normalizedPaymentCircleDate ?? null,
       },
     });
     console.log('new payment after created from payment service', newPayment);
@@ -64,13 +94,15 @@ export class IncomesPaymentService {
     if (dto.amount !== undefined) updateData.amount = dto.amount;
     if (dto.payment_type !== undefined)
       updateData.payment_type = dto.payment_type as $Enums.payment_type;
-    if (dto.payment_circle_date !== undefined)
-      updateData.payment_circle_date = dto.payment_circle_date;
     if (dto.loop !== undefined) updateData.loop = dto.loop;
     if (dto.status !== undefined)
       updateData.status = dto.status as $Enums.payment_status;
     updateData.financesource_id = sourceId;
-
+    if (dto.payment_circle_date !== undefined) {
+      updateData.payment_circle_date = this.normalizePaymentCircleDate(
+        dto.payment_circle_date,
+      );
+    }
     return this.prisma.financePayments.update({
       where: { id: paymentId },
       data: updateData,

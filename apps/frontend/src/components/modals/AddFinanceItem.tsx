@@ -10,7 +10,7 @@ type AddPaymentModalProps = {
   open: boolean;
   sourceId: string; // NEW: pass the source id where payment is being added
   onClose: () => void;
-  onPaymentAdded?: () => void; // Callback after successful payment add
+  onPaymentAdded?: (payment: FinancePayment) => void; // Callback after successful payment add
 };
 function makeBlankPayment(): FinancePayment {
   return {
@@ -64,8 +64,7 @@ export default function AddPaymentModal({
       console.log(newPayment);
 
       if (newPayment) {
-        console.log(newPayment);
-        onPaymentAdded?.(); // ← Call the callback to notify parent
+        onPaymentAdded?.(newPayment); // ← Call the callback to notify parent
       }
       showModal('Payment added succesfully.');
       onClose();

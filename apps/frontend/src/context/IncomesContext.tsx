@@ -121,12 +121,14 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   };
 
   //---add payment---
+  // apps/frontend/src/context/IncomesContext.tsx
   const addPayment = async (
     sourceId: string,
     payment: FinancePayment,
   ): Promise<FinancePayment | null> => {
     setLoading(true);
     setError(null);
+
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes/${sourceId}/payments`,
@@ -136,25 +138,31 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
           body: JSON.stringify(payment),
         },
       );
+
       if (!res.ok) {
-        throw new Error('Filed to add payment');
+        throw new Error('Failed to add payment');
       }
 
-      const updatedSource = await res.json();
+      const payload = await res.json(); // read response body once
+
+      // backend create usually returns one created payment object
+      const createdPayment: FinancePayment | null =
+        payload && payload.id ? payload : (payload?.newPayment ?? payload?.payment ?? null);
+
+      if (!createdPayment) return null;
+
       setData((prev) =>
         prev.map((src) =>
-          src.id === updatedSource.id
+          src.id === sourceId
             ? {
                 ...src,
-                finance_payments: updatedSource.finance_payments, // ← Just use the whole updated array!
+                finance_payments: [...(src.finance_payments ?? []), createdPayment], // append new payment
               }
             : src,
         ),
       );
-      // Return the newly created payment (it's the last one in the updated array)
-      const newPayment =
-        updatedSource.finance_payments?.[updatedSource.finance_payments.length - 1] || null;
-      return newPayment;
+
+      return createdPayment;
     } catch (error: any) {
       setError(error.message || 'Failed to add payment');
       return null;
@@ -162,7 +170,6 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
-
   //---update payment---
   const updatePayment = async (
     sourceId: string,
@@ -186,16 +193,26 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       }
 
       const response = await res.json();
-      // Update state with the complete updated source
+
       setData((prev) =>
-        prev.map((src) =>
-          src.id === sourceId
-            ? {
-                ...src,
-                finance_payments: response.updated_source?.finance_payments || src.finance_payments,
-              }
-            : src,
-        ),
+        prev.map((src) => {
+          if (src.id !== sourceId) return src;
+
+          if (response.updated_source?.finance_payments) {
+            return { ...src, finance_payments: response.updated_source.finance_payments };
+          }
+
+          if (response.updated_payment) {
+            return {
+              ...src,
+              finance_payments: (src.finance_payments ?? []).map((p) =>
+                p.id === paymentId ? response.updated_payment : p,
+              ),
+            };
+          }
+
+          return src;
+        }),
       );
       // Return the updated payment
       const updatedPayment =

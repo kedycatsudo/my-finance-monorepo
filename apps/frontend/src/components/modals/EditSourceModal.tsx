@@ -24,22 +24,21 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const [showAppModal, setShowAppModal] = useState<boolean | null>(null);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showAddInvestmentItemModal, setShowAddInvestmentItemModal] = useState(false);
-  const { data: incomesData } = useIncomesContext();
 
   // Sync localSource when payment is added
-  const handlePaymentAdded = () => {
-    const updatedSource = incomesData.find((src) => src.id === localSource.id);
-    console.log('updated Source on editSoruceModal', updatedSource);
-    if (updatedSource) {
-      setLocalSource(updatedSource);
-    }
+  const handlePaymentAdded = (newPayment: FinancePayment) => {
+    setLocalSource((prev) => {
+      if (!isFinanceSource(prev)) return prev;
+      if (prev.finance_payments.some((p) => p.id === newPayment.id)) return prev;
+      return { ...prev, finance_payments: [...prev.finance_payments, newPayment] };
+    });
   };
-
   useEffect(() => {
+    if (!open) return;
     setLocalSource(source);
     setOpenItemAccordions({});
     setErrors({});
-  }, [source, open]);
+  }, [open, source.id]);
 
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';

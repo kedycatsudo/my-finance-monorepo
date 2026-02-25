@@ -3,23 +3,20 @@ import { proxyToBackend } from '@/utils/proxyToBackend';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { sourceId } = req.query;
+
   if (!sourceId || Array.isArray(sourceId)) {
     return res.status(400).json({ message: 'sourceId is required' });
   }
-
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed on this route' });
   }
 
   const backendPath = `/api/incomes/sources/${sourceId}/payments`;
-
-  const originalBody = req.body;
   const mappedBody =
     req.method === 'POST'
       ? {
-          ...originalBody,
-          payment_type: originalBody?.payment_type ?? originalBody?.type,
-          payment_circle_date: originalBody?.payment_circle_date ?? originalBody?.date,
+          ...req.body,
+          payment_circle_date: req.body?.payment_circle_date ?? req.body?.date ?? null,
         }
       : undefined;
 
@@ -27,7 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     method: req.method,
     body: mappedBody ? JSON.stringify(mappedBody) : undefined,
   });
-
   res.status(backendRes.status);
   backendRes.headers.forEach((val, key) => res.setHeader(key, val));
   const raw = await backendRes.text();
@@ -36,23 +32,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const parsed = JSON.parse(raw);
     const mapPayment = (payment: any) => ({
       ...payment,
-      payment_type: payment?.payment_type,
+      amount:
+        payment?.amount !== undefined && payment?.amount !== null
+          ? Number(payment.amount)
+          : payment?.amount,
       date: payment?.payment_circle_date ?? payment?.date ?? '',
     });
-
-    const transformed = Array.isArray(parsed)
-      ? parsed.map(mapPayment)
-      : parsed && typeof parsed === 'object' && 'finance_payments' in parsed
-        ? {
-            ...parsed,
-            finance_payments: Array.isArray((parsed as any).finance_payments)
-              ? (parsed as any).finance_payments.map(mapPayment)
-              : (parsed as any).finance_payments,
-          }
-        : mapPayment(parsed);
-
+    let transformed;
+    if (Array.isArray(parsed)) {
+      transformed = parsed.map(mapPayment);
+    } else if (
+      parsed &&
+      typeof parsed === 'object' &&
+      'finance_payments' in parsed &&
+      Array.isArray((parsed as any).finance_payments)
+    ) {
+      transformed = {
+        ...parsed,
+        finance_payments: (parsed as any).finance_payments.map(mapPayment),
+      };
+    } else {
+      transformed = mapPayment(parsed);
+    }
+    console.log('transformed data from payments.ts:', transformed);
     return res.send(JSON.stringify(transformed));
-  } catch {
+  } catch (error: any) {
     return res.send(raw);
   }
 }
