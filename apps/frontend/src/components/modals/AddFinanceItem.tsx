@@ -47,6 +47,7 @@ export default function AddPaymentModal({
   }
 
   function validate() {
+    console.log(form.payment_type);
     const err: typeof errors = {};
     if (!form.name) err.name = 'Name required';
     if (!form.payment_type) err.payment_type = 'Type required';
@@ -65,9 +66,9 @@ export default function AddPaymentModal({
 
       if (newPayment) {
         onPaymentAdded?.(newPayment); // ← Call the callback to notify parent
+        showModal('Payment added succesfully.');
+        onClose();
       }
-      showModal('Payment added succesfully.');
-      onClose();
     }
   }
 

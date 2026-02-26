@@ -13,6 +13,7 @@ type SourceContainerProps = {
   open: boolean;
   onClick: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 };
 
 // Type guards for discriminated union
@@ -23,7 +24,13 @@ function isInvestmentSource(a: FinanceSource | InvestmentSource): a is Investmen
   return 'items' in a;
 }
 
-export default function SourceContainer({ item, open, onClick, onEdit }: SourceContainerProps) {
+export default function SourceContainer({
+  item,
+  open,
+  onClick,
+  onEdit,
+  onDelete,
+}: SourceContainerProps) {
   const [openPayments, setOpenPayments] = useState<{ [id: string]: boolean }>({});
 
   // Info content and payment/asset display
@@ -158,6 +165,17 @@ export default function SourceContainer({ item, open, onClick, onEdit }: SourceC
           className={`absolute top-0 right-0 w-8 h-8 transition-transform ${
             open ? 'rotate-90' : ''
           }`}
+        />
+        <Image
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent accidental open/close on edit
+            onDelete();
+          }}
+          src={`${assetPrefix}delete.svg`}
+          alt="Delete source button"
+          width={50}
+          height={50}
+          className={`absolute top-0 right-9 w-8 h-8 transition-transform `}
         />
       </div>
 

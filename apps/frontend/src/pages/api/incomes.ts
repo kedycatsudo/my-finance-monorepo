@@ -5,7 +5,6 @@ import { proxyToBackend } from '@/utils/proxyToBackend';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { sourceId } = req.query;
-  console.log('req body', req.body);
   let backendPath = '/api/incomes/sources';
   if (req.method === 'PATCH' || req.method === 'DELETE') {
     if (!sourceId || Array.isArray(sourceId)) {

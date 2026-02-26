@@ -35,7 +35,7 @@ function fromSourceBaseToFinanceSource(
 }
 
 export default function Incomes() {
-  const { showModal } = useModal();
+  const { showModal, showConfirmModal, closeModal } = useModal();
   const {
     data: incomes,
     updateSource,
@@ -43,11 +43,14 @@ export default function Incomes() {
     loading,
     error,
     updatePayment,
+    removeSource,
   } = useIncomesContext();
-  useEffect(() => {}, [incomes]); // This runs every time incomes changes
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editSource, setEditSource] = useState<FinanceSource | null>(null);
+  const [editSourceId, setEditSourceId] = useState<string | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
+  const liveEditSource = editSourceId
+    ? (incomes.find((src) => src.id === editSourceId) ?? null)
+    : null;
   const pathName = usePathname();
 
   const totalIncomes = (incomes ?? []).reduce((acc, src) => {
@@ -148,9 +151,22 @@ export default function Incomes() {
                 key={item.id}
                 item={item}
                 open={open}
-                onClick={onClick}
+                onDelete={() => {
+                  showConfirmModal(
+                    'Please confirm that selected source will be deleted with the payments attached.',
+                    async () => {
+                      const ok = await removeSource(item.id);
+                      closeModal();
+                      if (ok ?? null) showModal('Source deleted successfully.');
+                    },
+                    () => closeModal(),
+                  );
+                }}
+                onClick={() => {
+                  onClick();
+                }}
                 onEdit={() => {
-                  setEditSource(item);
+                  setEditSourceId(item.id);
                   setEditModalOpen(true);
                 }}
               />
@@ -159,20 +175,19 @@ export default function Incomes() {
           />
 
           {/* Edit existing source modal */}
-          {editSource && (
+          {liveEditSource && (
             <EditSourceModal
               open={editModalOpen}
-              source={editSource}
+              source={liveEditSource}
               onClose={() => setEditModalOpen(false)}
               onSubmit={async (updatedSource) => {
                 if ('finance_payments' in updatedSource) {
                   {
                     await updateSource(updatedSource);
-
-                    for (const payment of updatedSource.finance_payments) {
-                      await updatePayment(updatedSource.id, payment.id, payment);
-                    }
+                    showModal('Source updated succesfully.');
                   }
+                  setEditModalOpen(false);
+                  setEditSourceId(null);
                 }
               }}
             />

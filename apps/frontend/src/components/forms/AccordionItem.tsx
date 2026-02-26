@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-
+import Image from 'next/image';
 import FieldInput from './FieldInput';
+import { assetPrefix } from '@/constants/config';
 
 type ItemFieldConfig = {
   field: string;
@@ -18,6 +19,7 @@ type AccordionItemProps = {
   toggleOpen: () => void;
   handleItemInput: (itemId: string, field: string, value: any) => void;
   errors?: Record<string, any>;
+  onDelete?: () => void;
 };
 
 //Renders on item(payment/investment) accordion, reusable
@@ -30,6 +32,7 @@ export default function AccordionItem({
   toggleOpen,
   handleItemInput,
   errors,
+  onDelete,
 }: AccordionItemProps) {
   function getError(
     errors: Record<string, any> | undefined,
@@ -52,9 +55,22 @@ export default function AccordionItem({
       className={`border-4 border-[#29388A] rounded px-2 py-2 transition-all cursor-pointer ${isOpen ? 'bg-[#3A4483]/75 text-white' : 'text-[#29388A]'}`}
     >
       <div onClick={toggleOpen} className="flex flex-row justify-between items-center">
-        <span> {'name' in item ? item.name : item.assetName}</span>{' '}
+        <div className="flex">
+          <span> {'name' in item ? item.name : item.assetName}</span>{' '}
+          <Image
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent accidental open/close on edit
+              onDelete();
+            }}
+            src={`${assetPrefix}delete.svg`}
+            alt="Delete payment button"
+            width={30}
+            height={30}
+            className={`w-7 h- `}
+          />{' '}
+        </div>
         <span className="text-sm text-gray-500">{isOpen ? '▼' : '▶'}</span>
-      </div>
+      </div>{' '}
       {isOpen && (
         <div className="mt-2 flex flex-col gap-2">
           {fieldConfig.map((f) =>

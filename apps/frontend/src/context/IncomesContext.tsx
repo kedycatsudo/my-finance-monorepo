@@ -7,7 +7,7 @@ type IncomesContextType = {
   setData: React.Dispatch<React.SetStateAction<FinanceSource[]>>;
   addSource: (source: Omit<FinanceSource, 'id'>) => Promise<void>;
   updateSource: (source: FinanceSource) => Promise<void>;
-  removeSource: (sourceId: string) => Promise<void>;
+  removeSource: (sourceId: string) => Promise<boolean>;
   loading: boolean;
   error: string | null;
   addPayment: (sourceId: string, payment: FinancePayment) => Promise<FinancePayment | null>;
@@ -16,6 +16,7 @@ type IncomesContextType = {
     paymentId: string,
     payment: Partial<FinancePayment>,
   ) => Promise<FinancePayment | null>;
+  removePayment: (sourceId: string, paymentId: string) => Promise<boolean>;
 };
 
 const IncomesContext = createContext<IncomesContextType | undefined>(undefined);
@@ -28,28 +29,41 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   const [data, setData] = useState<FinanceSource[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  // 1) add a fetch function you can reuse
+  const fetchIncomes = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-  // ----- Fetch incomes from API -----
-  useEffect(() => {
+    // wait for auth instead of failing once forever
+    if (!token) {
+      setLoading(false);
+      setError('Waiting for authentication token...');
+      return;
+    }
+
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes`, {
-      headers: {
-        ...getAuthHeader(),
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Could not fetch incomes');
-        return res.json();
-      })
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || 'Could not fetch incomes');
-        setData([]);
-        setLoading(false);
+    setError(null);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes`, {
+        headers: { authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) {
+        throw new Error(`Could not fetch incomes (${res.status})`);
+      }
+
+      const payload = await res.json();
+      setData(Array.isArray(payload) ? payload : []);
+    } catch (err: any) {
+      setError(err.message || 'Could not fetch incomes');
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // 2) initial load
+  useEffect(() => {
+    fetchIncomes();
   }, []);
 
   // ----- Add income-----
@@ -101,6 +115,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
 
   // ----- Remove income -----
   const removeSource = async (sourceId: string) => {
+    console.log('removeSource hit in the context.');
     setLoading(true);
     setError(null);
     try {
@@ -113,8 +128,10 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       );
       if (!res.ok) throw new Error('Failed to remove income');
       setData((prev) => prev.filter((i) => i.id !== sourceId));
+      return true;
     } catch (err: any) {
       setError(err.message || 'Failed to remove income');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -184,7 +201,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-          body: JSON.stringify(payment),
+          body: JSON.stringify(payment ?? {}),
         },
       );
 
@@ -228,6 +245,40 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
     }
   };
 
+  //remove payment
+  const removePayment = async (sourceId: string, paymentId: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH}/api/incomes/${sourceId}/payments/${paymentId}`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        },
+      );
+      if (!res.ok) {
+        throw new Error('Failed to remove payment');
+      }
+      setData((prev) =>
+        prev.map((src) =>
+          src.id === sourceId
+            ? {
+                ...src,
+                finance_payments: (src.finance_payments ?? []).filter((p) => p.id !== paymentId),
+              }
+            : src,
+        ),
+      );
+      return true;
+    } catch (error: any) {
+      setError(error.message || 'Failed to remove payment');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <IncomesContext.Provider
       value={{
@@ -240,6 +291,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         error,
         addPayment,
         updatePayment,
+        removePayment,
       }}
     >
       {children}

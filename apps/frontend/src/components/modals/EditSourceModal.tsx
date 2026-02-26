@@ -10,6 +10,7 @@ import { isFinanceSource, isInvestmentSource } from '@/utils/functions/typeGuard
 import AddInvestmentItemModal from './AddInvestmentItem';
 import AddPaymentModal from './AddFinanceItem';
 import { useIncomesContext } from '@/context/IncomesContext';
+import { useModal } from '@/context/ModalContext';
 type EditSourceModalProps = {
   open: boolean;
   source: FinanceSource | InvestmentSource;
@@ -21,25 +22,46 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const [localSource, setLocalSource] = useState<FinanceSource | InvestmentSource>(source);
   const [openItemAccordions, setOpenItemAccordions] = useState<{ [id: string]: boolean }>({});
   const [errors, setErrors] = useState<{ [field: string]: string }>({});
-  const [showAppModal, setShowAppModal] = useState<boolean | null>(null);
+  const [setShowAppModal] = useState<boolean | null>(null);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showAddInvestmentItemModal, setShowAddInvestmentItemModal] = useState(false);
-
+  const { showModal, showConfirmModal, closeModal } = useModal();
+  const { removePayment, updatePayment } = useIncomesContext();
   // Sync localSource when payment is added
-  const handlePaymentAdded = (newPayment: FinancePayment) => {
-    setLocalSource((prev) => {
-      if (!isFinanceSource(prev)) return prev;
-      if (prev.finance_payments.some((p) => p.id === newPayment.id)) return prev;
-      return { ...prev, finance_payments: [...prev.finance_payments, newPayment] };
-    });
-  };
+  const sourceId = source.id;
+  console.log(sourceId);
   useEffect(() => {
-    if (!open) return;
     setLocalSource(source);
     setOpenItemAccordions({});
     setErrors({});
-  }, [open, source.id]);
+  }, [source, open]);
 
+  const handlePaymentAdded = (created: FinancePayment) => {
+    setLocalSource((prev) =>
+      isFinanceSource(prev)
+        ? {
+            ...prev,
+            finance_payments: prev.finance_payments.some((p) => p.id === created.id)
+              ? prev.finance_payments
+              : [...prev.finance_payments, created],
+          }
+        : prev,
+    );
+  };
+  const handlePaymentRemoved = async (paymentId: string) => {
+    if (!isFinanceSource(localSource)) return;
+    const ok = await removePayment(localSource.id, paymentId);
+    if (!ok) return;
+
+    setLocalSource((prev) =>
+      isFinanceSource(prev)
+        ? {
+            ...prev,
+            finance_payments: prev.finance_payments.filter((p) => p.id !== paymentId),
+          }
+        : prev,
+    );
+  };
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
@@ -53,17 +75,23 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const handleSourceInput = (field: string, value: any) => {
     setLocalSource((prev) => ({ ...prev, [field]: value }) as any);
   };
-  const handleItemInput = (itemId: string, field: any, value: string) => {
-    const arrKey = isFinanceSource(localSource) ? 'finance_payments' : 'items';
-    setLocalSource(
-      (prev) =>
-        ({
-          ...prev,
-          [arrKey]: (prev as any)[arrKey].map((itm: any) =>
-            itm.id === itemId ? { ...itm, [field]: value } : itm,
-          ),
-        }) as any,
+  const handleItemInput = async (itemId: string, field: string, value: any) => {
+    if (!isFinanceSource(localSource)) return;
+
+    // 1) optimistic local update
+    setLocalSource((prev) =>
+      isFinanceSource(prev)
+        ? {
+            ...prev,
+            finance_payments: prev.finance_payments.map((itm) =>
+              itm.id === itemId ? { ...itm, [field]: value } : itm,
+            ),
+          }
+        : prev,
     );
+
+    // 2) persist immediately
+    await updatePayment(localSource.id, itemId, { [field]: value });
   };
 
   function validate() {
@@ -142,6 +170,17 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
                 fieldConfig={PAYMENT_FIELDS}
                 itemTypeKey="payment"
                 isOpen={!!openItemAccordions[payment.id]}
+                onDelete={() => {
+                  showConfirmModal(
+                    'Please confirm that selected source will be deleted with the payments attached.',
+                    async () => {
+                      const ok = await removePayment(source.id, payment.id);
+                      closeModal();
+                      if (ok ?? null) showModal('Payment deleted successfully.');
+                    },
+                    () => closeModal(),
+                  );
+                }}
                 toggleOpen={() =>
                   setOpenItemAccordions((prev) => ({
                     ...prev,
