@@ -54,7 +54,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       transformed = mapPayment(parsed);
     }
-    console.log('transformed data from payments.ts:', transformed);
     return res.send(JSON.stringify(transformed));
   } catch (error: any) {
     return res.send(raw);

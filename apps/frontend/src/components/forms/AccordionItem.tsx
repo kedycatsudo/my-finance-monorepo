@@ -20,6 +20,7 @@ type AccordionItemProps = {
   handleItemInput: (itemId: string, field: string, value: any) => void;
   errors?: Record<string, any>;
   onDelete?: () => void;
+  handleItemBlur?: (itemId: string, field: string) => void;
 };
 
 //Renders on item(payment/investment) accordion, reusable
@@ -33,6 +34,7 @@ export default function AccordionItem({
   handleItemInput,
   errors,
   onDelete,
+  handleItemBlur,
 }: AccordionItemProps) {
   function getError(
     errors: Record<string, any> | undefined,
@@ -82,6 +84,7 @@ export default function AccordionItem({
                 enumOptions={f.enumOptions}
                 value={item[f.field]}
                 onChange={(v) => handleItemInput(item.id, f.field, v)}
+                onBlur={() => handleItemBlur?.(item.id, f.field)}
                 err={getError(errors, itemTypeKey, item.id, f.field)}
               ></FieldInput>
             ),

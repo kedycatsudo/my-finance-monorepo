@@ -33,7 +33,6 @@ export class IncomesPaymentsController {
     @Param('sourceId') sourceId: string,
     @Body() dto: CreataIncomePaymentDto,
   ) {
-    console.log('req body in ', req.body);
     return this.service.createPayment(req.user.userId, sourceId, dto);
   }
 

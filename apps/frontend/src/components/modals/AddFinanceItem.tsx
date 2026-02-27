@@ -47,7 +47,6 @@ export default function AddPaymentModal({
   }
 
   function validate() {
-    console.log(form.payment_type);
     const err: typeof errors = {};
     if (!form.name) err.name = 'Name required';
     if (!form.payment_type) err.payment_type = 'Type required';
@@ -62,7 +61,6 @@ export default function AddPaymentModal({
     if (validate()) {
       // Use context's addPayment for API then state update
       const newPayment = await addPayment(sourceId, form);
-      console.log(newPayment);
 
       if (newPayment) {
         onPaymentAdded?.(newPayment); // ← Call the callback to notify parent

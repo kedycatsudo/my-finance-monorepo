@@ -60,7 +60,6 @@ export class IncomesPaymentService {
         payment_circle_date: normalizedPaymentCircleDate ?? null,
       },
     });
-    console.log('new payment after created from payment service', newPayment);
     return newPayment;
   }
 

@@ -115,7 +115,6 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
 
   // ----- Remove income -----
   const removeSource = async (sourceId: string) => {
-    console.log('removeSource hit in the context.');
     setLoading(true);
     setError(null);
     try {
