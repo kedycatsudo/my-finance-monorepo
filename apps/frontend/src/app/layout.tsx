@@ -14,6 +14,7 @@ import {
   InvestmentsProvider,
   OutcomesProvider,
 } from '@/context/FinanceGenericContext';
+import { OutcomesProvider2 } from '@/context/OutcomesContext';
 import { IncomesProvider2 } from '@/context/IncomesContext';
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -25,17 +26,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <ModalProvider>
                 <IncomesProvider>
                   <IncomesProvider2>
-                    <InvestmentsProvider>
-                      <OutcomesProvider>
-                        <FinanceSourceProvider type="default">
-                          {' '}
-                          {/* spelling! */}
-                          <Header />
-                          {children}
-                          <AppModal />
-                        </FinanceSourceProvider>
-                      </OutcomesProvider>
-                    </InvestmentsProvider>
+                    <OutcomesProvider2>
+                      <InvestmentsProvider>
+                        <OutcomesProvider>
+                          <FinanceSourceProvider type="default">
+                            {' '}
+                            {/* spelling! */}
+                            <Header />
+                            {children}
+                            <AppModal />
+                          </FinanceSourceProvider>
+                        </OutcomesProvider>
+                      </InvestmentsProvider>
+                    </OutcomesProvider2>
                   </IncomesProvider2>
                 </IncomesProvider>
               </ModalProvider>

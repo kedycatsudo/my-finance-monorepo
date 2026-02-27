@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { FinancePayment, FinanceSource } from '@/types/finance';
+import { useAuth } from './AuthContext';
 
 type IncomesContextType = {
   data: FinanceSource[];
@@ -26,20 +27,12 @@ function getAuthHeader(): Record<string, string> {
 }
 
 export function IncomesProvider2({ children }: { children: ReactNode }) {
+  const { jwt } = useAuth();
   const [data, setData] = useState<FinanceSource[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   // 1) add a fetch function you can reuse
-  const fetchIncomes = async () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-    // wait for auth instead of failing once forever
-    if (!token) {
-      setLoading(false);
-      setError('Waiting for authentication token...');
-      return;
-    }
-
+  const fetchIncomes = async (token: string) => {
     setLoading(true);
     setError(null);
 
@@ -63,8 +56,15 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   };
   // 2) initial load
   useEffect(() => {
-    fetchIncomes();
-  }, []);
+    if (!jwt) {
+      setData([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    fetchIncomes(jwt);
+  }, [jwt]);
 
   // ----- Add income-----
   const addSource = async (source: Omit<FinanceSource, 'id'>) => {

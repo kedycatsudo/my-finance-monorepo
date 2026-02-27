@@ -8,11 +8,11 @@ import PieChartData from '@/components/PieChartData';
 import PieChart, { CATEGORY_COLORS, DEFAULT_CHART_COLORS } from '@/components/PieChart';
 import CatchUpTheMonth from '@/components/outcomes/catchUpTheMonth';
 import SourcesDetailsContainer from '@/components/sourcesDetailsContainer/sourcesDetailsContainer';
-import { useOutcomesContext } from '@/context/FinanceGenericContext';
 import { usePathname } from 'next/navigation';
 import { FinanceSource } from '@/types/finance';
 import EditSourceModal from '@/components/modals/EditSourceModal';
 import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
+import { useOutcomesContext } from '@/context/OutcomesContext';
 import {
   RecentPaid,
   UpcomingPayment,
@@ -28,12 +28,10 @@ import SourceContainer from '@/components/sourcesDetailsContainer/sourceContaine
 // -- HELPERS
 function fromSourceBaseToFinanceSource(
   base: Omit<SourceBase, 'id'> & { sourceType: 'finance' },
-  id: string,
-): FinanceSource {
+): Omit<FinanceSource, 'id'> {
   return {
     ...base,
-    id,
-    payments: [],
+    finance_payments: [],
     type: 'outcome',
   };
 }
@@ -45,25 +43,18 @@ export default function Outcomes() {
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
   const { data: outcomes, updateSource, addSource, loading, error } = useOutcomesContext();
 
-  const newSourceType: 'finance' = 'finance';
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-  if (!outcomes || outcomes.length === 0) {
-    return <div>No outcomes found</div>;
-  }
-
   // ... prepare your summary data as usual...
 
-  const pieDataRaw = outcomes.map((src) => ({
-    name: src.name,
-    amount: src.payments.reduce((sum, p) => sum + p.amount, 0),
-    description: src.description,
-  }));
+  const pieDataRaw =
+    outcomes.map((src) => ({
+      name: src.name,
+      amount: (Array.isArray(src?.finance_payments) ? src.finance_payments : []).reduce(
+        (sum, p) => sum + (p?.amount || 0),
+        0,
+      ),
+      description: src.description,
+    })) ?? [];
+
   const pieDataWithColors = pieDataRaw.map((item, idx) => ({
     ...item,
     color: CATEGORY_COLORS[item.name] || DEFAULT_CHART_COLORS[idx % DEFAULT_CHART_COLORS.length],
@@ -131,6 +122,7 @@ export default function Outcomes() {
             items={outcomes}
             renderSource={(item, open, onClick, onEdit) => (
               <SourceContainer
+                onDelete={() => {}}
                 key={item.id}
                 item={item}
                 open={open}
@@ -161,10 +153,7 @@ export default function Outcomes() {
               open={addSourceModalOpen}
               onClose={() => setAddSourceModalOpen(false)}
               onSubmit={(fields) => {
-                const id = Date.now().toString() + Math.random().toString(36).slice(2);
-                addSource(
-                  fromSourceBaseToFinanceSource({ ...fields, sourceType: newSourceType }, id),
-                );
+                addSource(fromSourceBaseToFinanceSource({ ...fields, sourceType: 'finance' }));
                 setAddSourceModalOpen(false);
               }}
             />

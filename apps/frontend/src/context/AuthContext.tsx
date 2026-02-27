@@ -23,7 +23,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { profile, setProfile, updateProfile } = useProfile();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [jwt, setJwt] = useState<string | null>(null);
+  const [jwt, setJwt] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('token') : null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   //Login with credentials
@@ -40,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await res.json();
       if (res.ok && data.access_token && data.user) {
+        setJwt(data.access_token);
         setCurrentUser(data.user);
         setProfile(data.user);
         localStorage.setItem('profile', JSON.stringify(data.user));
@@ -92,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setJwt(null);
     setCurrentUser(null);
     setError(null);
+    localStorage.removeItem('token');
   }
   return (
     <AuthContext.Provider
