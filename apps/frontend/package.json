@@ -6,6 +6,7 @@
     "dev": "next dev",
     "dev:3001": "PORT=3001 next",
     "build": "next build",
+    "typecheck": "tsc --noEmit",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d out",
     "start": "next start",

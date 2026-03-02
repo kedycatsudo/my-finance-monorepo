@@ -6,15 +6,29 @@ type DataCalculationProps = {
   data: FinanceSource[];
 };
 // outcomes Calculations
+
 export function RecentPaid({ data }: DataCalculationProps): RecentSideInfoItem[] {
-  return data
-    .flatMap((outcome) => outcome.finance_payments)
-    .filter((payment) => payment.status === 'paid')
-    .map((p) => ({ name: p.name, data: p.amount, unit: '$', date: p.date }));
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((outcome) =>
+      Array.isArray(outcome?.finance_payments) ? outcome.finance_payments : [],
+    )
+    .filter((payment): payment is FinancePayment => Boolean(payment))
+    .filter((payment) => (payment.status = 'paid'))
+    .map((p) => ({
+      name: p.name,
+      data: p.amount,
+      unit: '$',
+      date: p.date,
+    }));
 }
 export function UpcomingPayment({ data }: DataCalculationProps): RecentSideInfoItem[] {
-  return data
-    .flatMap((outcome) => outcome.finance_payments)
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((outcome) =>
+      Array.isArray(outcome?.finance_payments) ? outcome.finance_payments : [],
+    )
+    .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'coming')
     .map((p) => ({ name: p.name, data: p.amount, unit: '$', date: p.date }));
 }
@@ -43,10 +57,24 @@ export function TotalOutcomesPaidAmount({ data }: DataCalculationProps): number 
     .filter((payment) => payment.status === 'paid')
     .reduce((sum, payment) => sum + payment.amount, 0);
 }
-export function UpcomingPayments({ data }: DataCalculationProps) {
-  return data
-    .flatMap((outcome) => outcome.finance_payments)
+export function outcomeUpcoming({ data }: DataCalculationProps): object {
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((outcome) =>
+      Array.isArray(outcome?.finance_payments) ? outcome?.finance_payments : [],
+    )
+    .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'coming');
+}
+export function UpcomingOutcomeAmount({ data }: DataCalculationProps): number {
+  const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
+  return sources
+    .flatMap((outcome) =>
+      Array.isArray(outcome?.finance_payments) ? outcome.finance_payments : [],
+    )
+    .filter((payment): payment is FinancePayment => Boolean(payment))
+    .filter((payment) => payment.status === 'coming')
+    .reduce((sum, payment) => sum + payment.amount, 0);
 }
 export function UpcomingAmount({ data }: DataCalculationProps): number {
   return data
@@ -57,7 +85,10 @@ export function UpcomingAmount({ data }: DataCalculationProps): number {
 export function OutcomeSourcesList({ data }: DataCalculationProps): SourceListItem[] {
   return data.map((d) => ({
     name: d.name,
-    amount: d.finance_payments.reduce((sum, p) => sum + p.amount, 0),
+    amount: (Array.isArray(d?.finance_payments) ? d.finance_payments : []).reduce(
+      (sum, p) => sum + (p?.amount || 0),
+      0,
+    ),
     unit: '$',
   }));
 }

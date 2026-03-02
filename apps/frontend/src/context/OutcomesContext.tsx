@@ -91,14 +91,59 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
+  const updateSource = async (source: FinanceSource) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH}/api/outcomes?sourceId=${source.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify(source),
+        },
+      );
+      if (!res.ok) throw new Error('Failed to remove income');
+      const response = await res.json();
+      // Replace the entire source with the updated one from backend
+      setData((prev) => prev.map((src) => (src.id === source.id ? response.updated_source : src)));
+      return response.updated_source;
+    } catch (error: any) {
+      setError(error.message || 'Failed to update income');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const removeSource = async (sourceId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH}/api/outcomes?sourceId=${sourceId}`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        },
+      );
+      if (!res.ok) throw new Error('Failed to remove outcome');
+      setData((prev) => prev.filter((i) => i.id !== sourceId));
+      return true;
+    } catch (error: any) {
+      setError(error.message || 'Failed to remove the outcome source');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <OutcomesContext.Provider
       value={{
         data,
         setData,
         addSource,
-        updateSource: async () => {}, // TODO: implement
-        removeSource: async () => false, // TODO: implement
+        updateSource,
+        removeSource,
         loading,
         error,
         addPayment: async () => null, // TODO: implement

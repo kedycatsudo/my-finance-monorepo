@@ -1,19 +1,31 @@
 // Utility for incomes/outcomes
 export function flattenPayments<
-  S extends { name: string; payments: P[] },
-  P extends { date: string | number; amount: number; name: string; status: string },
->(sources: S[]): (P & { source: string })[] {
-  return sources
-    .flatMap((src) =>
-      src.payments.map((p) => ({
+  S extends { name?: string; sourceName?: string; finance_paymens?: P[]; payments?: P[] },
+  P extends {
+    date: string;
+    amount: number;
+    name: string;
+    status: string;
+    loop: boolean;
+    payment_type?: string;
+    type?: string;
+  },
+>(sources: S[]): (P & { source: string; payment_type: string })[] {
+  return (Array.isArray(sources) ? sources : [])
+    .flatMap((src) => {
+      const source = src.name ?? src.sourceName ?? '';
+      const payments = Array.isArray(src.finance_paymens)
+        ? src.finance_paymens
+        : Array.isArray(src.payments)
+          ? src.payments
+          : [];
+      return payments.map((p) => ({
         ...p,
-        source: src.name,
-        name: p.name,
-        amount: p.amount,
-        status: p.status,
-      })),
-    )
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        source,
+        payment_type: p.payment_type ?? p.type ?? '',
+      }));
+    })
+    .sort((a, b) => new Date(String(b.date)).getTime() - new Date(String(a.date)).getTime());
 }
 
 // Utility for investments (for your InvestmentSource shape)

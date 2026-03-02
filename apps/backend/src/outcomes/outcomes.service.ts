@@ -16,6 +16,7 @@ export class OutcomesService {
         user_id: userId,
         type: 'outcome',
       },
+      include: { finance_payments: true },
     });
     return source;
   }
@@ -30,17 +31,19 @@ export class OutcomesService {
   async update(userId: string, sourceId: string, dto: UpdateOutcomeSourceDto) {
     const source = await this.prisma.financeSources.findUnique({
       where: { id: sourceId },
+      include: { finance_payments: true },
     });
     if (!source || source.user_id !== userId || source.type !== 'outcome')
       throw new Error('Outcome source not found or unautharized');
-    await this.prisma.financeSources.update({
+    const updated_source = await this.prisma.financeSources.update({
       where: { id: sourceId },
       data: {
         name: dto.name,
         description: dto.description,
       },
+      include: { finance_payments: true },
     });
-    return { message: 'Source updated succesfully.' };
+    return { message: 'Source updated succesfully.', updated_source };
   }
 
   async remove(userId: string, sourceId: string) {

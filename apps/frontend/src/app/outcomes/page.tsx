@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import SideBar from '@/components/SideBar';
 import RecentSideInfo from '@/components/RecentSideInfo';
 import MobileMenuButton from '@/components/MobileBurgerMenu';
@@ -10,16 +10,18 @@ import CatchUpTheMonth from '@/components/outcomes/catchUpTheMonth';
 import SourcesDetailsContainer from '@/components/sourcesDetailsContainer/sourcesDetailsContainer';
 import { usePathname } from 'next/navigation';
 import { FinanceSource } from '@/types/finance';
+import { FinancePayment } from '@/types/finance';
 import EditSourceModal from '@/components/modals/EditSourceModal';
 import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
 import { useOutcomesContext } from '@/context/OutcomesContext';
+import { useModal } from '@/context/ModalContext';
 import {
   RecentPaid,
   UpcomingPayment,
   TotalOutcomes,
   PaidOutcomePayments,
-  UpcomingPayments,
-  UpcomingAmount,
+  outcomeUpcoming,
+  UpcomingOutcomeAmount,
   OutcomeSourcesList,
 } from '@/utils/functions/dataCalculations/outcomeDataCalculations';
 import { TotalIncomesPaidAmount } from '@/utils/functions/dataCalculations/incomesDataCalculations';
@@ -31,18 +33,47 @@ function fromSourceBaseToFinanceSource(
 ): Omit<FinanceSource, 'id'> {
   return {
     ...base,
-    finance_payments: [],
+    finance_payments: [] as FinancePayment[],
     type: 'outcome',
   };
 }
 
 export default function Outcomes() {
   const pathName = usePathname();
+  const { showModal, showConfirmModal, closeModal } = useModal();
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editSource, setEditSource] = useState<FinanceSource | null>(null);
+  const [editSourceId, setEditSourceId] = useState<string | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
-  const { data: outcomes, updateSource, addSource, loading, error } = useOutcomesContext();
+  const {
+    data: outcomes,
+    removeSource,
+    updateSource,
+    addSource,
+    loading,
+    error,
+  } = useOutcomesContext();
+  const liveEditSource = editSourceId
+    ? (outcomes.find((src) => src.id === editSourceId) ?? null)
+    : null;
 
+  //Quick reachs
+  const outcomesUpcoming = outcomeUpcoming({ data: outcomes });
+  const upcomingPaymentsCount = Array.isArray(outcomesUpcoming) ? outcomeUpcoming.length : 0;
+  const upcomingOutcomeAmount = UpcomingOutcomeAmount({ data: outcomes });
+  const recentPaid = RecentPaid({ data: outcomes });
+  const upcomingPayment = UpcomingPayment({ data: outcomes });
+  const outcomesSourceList = OutcomeSourcesList({ data: outcomes });
+  const catchUptheMonth = [
+    { name: 'Total Outcomes', data: TotalOutcomes({ data: outcomes }), unit: '$' },
+    {
+      name: 'Got Paid Payments',
+      data: Object.keys(PaidOutcomePayments({ data: outcomes })).length,
+    },
+    { name: 'Got Paid Amount', data: TotalIncomesPaidAmount({ data: outcomes }), unit: '$' },
+    { name: 'UpComing Payments', data: upcomingPaymentsCount },
+    { name: 'Upcoming Amount', data: upcomingOutcomeAmount ?? 0, unit: '$' },
+    { name: 'Reset Date', data: '-/01-' },
+  ];
   // ... prepare your summary data as usual...
 
   const pieDataRaw =
@@ -68,17 +99,6 @@ export default function Outcomes() {
   }));
 
   // Example catchUp arrays here, use your calculation logic
-  const catchUptheMonth = [
-    { name: 'Total Outcomes', data: TotalOutcomes({ data: outcomes }), unit: '$' },
-    {
-      name: 'Got Paid Payments',
-      data: Object.keys(PaidOutcomePayments({ data: outcomes })).length,
-    },
-    { name: 'Got Paid Amount', data: TotalIncomesPaidAmount({ data: outcomes }), unit: '$' },
-    { name: 'UpComing Payments', data: Object.keys(UpcomingPayments({ data: outcomes })).length },
-    { name: 'Upcoming Amount', data: UpcomingAmount({ data: outcomes }), unit: '$' },
-    { name: 'Reset Date', data: '-/01-' },
-  ];
 
   return (
     <main className="flex flex-col xs:flex-row min-h-screen gap-1">
@@ -88,8 +108,8 @@ export default function Outcomes() {
           className="hidden [@media(min-width:450px)]:flex rounded-lg ..."
         />
         <div className="w-full flex flex-row xs:flex-col relative gap-2 items-center">
-          <RecentSideInfo header="Recent Paid" items={RecentPaid({ data: outcomes })} />
-          <RecentSideInfo header="Upcoming payment" items={UpcomingPayment({ data: outcomes })} />
+          <RecentSideInfo header="Recent Paid" items={recentPaid} />
+          <RecentSideInfo header="Upcoming payment" items={upcomingPayment} />
         </div>
       </div>
       <section className="w-full flex flex-col flex-start items-center gap-5 ">
@@ -110,7 +130,7 @@ export default function Outcomes() {
         </div>
         <div className="flex flex-col md:flex-row justify-center items-center gap-1 w-full">
           <CatchUpTheMonth header="Quick Catch Up For This Month" items={catchUptheMonth} />
-          <SourcesList header="Outcome Sources" items={OutcomeSourcesList({ data: outcomes })} />
+          <SourcesList header="Outcome Sources" items={outcomesSourceList} />
         </div>
         <div className="pl-1 flex flex-col md:flex-row items-center w-full gap-1">
           <PieChart data={pieDataWithColors} />
@@ -122,29 +142,43 @@ export default function Outcomes() {
             items={outcomes}
             renderSource={(item, open, onClick, onEdit) => (
               <SourceContainer
-                onDelete={() => {}}
+                onDelete={() => {
+                  showConfirmModal(
+                    'Please confirm that selected source will be deleted with the payments attached.',
+                    async () => {
+                      const ok = await removeSource(item.id);
+                      closeModal();
+                      if (ok ?? null) showModal('Source deleted successfully.');
+                    },
+                    () => closeModal(),
+                  );
+                }}
                 key={item.id}
                 item={item}
                 open={open}
-                onClick={onClick}
+                onClick={() => onClick()}
                 onEdit={() => {
-                  setEditSource(item);
+                  setEditSourceId(item.id);
                   setEditModalOpen(true);
                 }}
               />
             )}
             onAddSource={() => setAddSourceModalOpen(true)}
           />
-          {editSource && (
+          {liveEditSource && (
             <EditSourceModal
               open={editModalOpen}
-              source={editSource}
+              source={liveEditSource}
               onClose={() => setEditModalOpen(false)}
-              onSubmit={(updatedSource) => {
-                if ('payments' in updatedSource) {
-                  updateSource(updatedSource);
+              onSubmit={async (updatedSource) => {
+                if ('finance_payments' in updatedSource) {
+                  {
+                    await updateSource(updatedSource);
+                    showModal('Source updated succesfully.');
+                  }
+                  setEditModalOpen(false);
+                  setEditSourceId(null);
                 }
-                setEditModalOpen(false);
               }}
             />
           )}
