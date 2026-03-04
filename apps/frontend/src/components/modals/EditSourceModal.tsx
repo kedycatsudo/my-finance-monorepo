@@ -10,6 +10,7 @@ import { isFinanceSource, isInvestmentSource } from '@/utils/functions/typeGuard
 import AddInvestmentItemModal from './AddInvestmentItem';
 import AddPaymentModal from './AddFinanceItem';
 import { useIncomesContext } from '@/context/IncomesContext';
+import { useOutcomesContext } from '@/context/OutcomesContext';
 import { useModal } from '@/context/ModalContext';
 type EditSourceModalProps = {
   open: boolean;
@@ -26,7 +27,9 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showAddInvestmentItemModal, setShowAddInvestmentItemModal] = useState(false);
   const { showModal, showConfirmModal, closeModal } = useModal();
-  const { removePayment, updatePayment } = useIncomesContext();
+  const { removeIncomePayment, updatePayment } = useIncomesContext();
+  const { removeOutcomePayment } = useOutcomesContext();
+
   const pendingChanges = useRef<Record<string, Partial<FinancePayment>>>({});
   // Sync localSource when payment is added
   const sourceId = source.id;
@@ -59,20 +62,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
         : prev,
     );
   };
-  const handlePaymentRemoved = async (paymentId: string) => {
-    if (!isFinanceSource(localSource)) return;
-    const ok = await removePayment(localSource.id, paymentId);
-    if (!ok) return;
 
-    setLocalSource((prev) =>
-      isFinanceSource(prev)
-        ? {
-            ...prev,
-            finance_payments: prev.finance_payments.filter((p) => p.id !== paymentId),
-          }
-        : prev,
-    );
-  };
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
@@ -129,7 +119,6 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
 
     return Object.keys(err).length === 0;
   }
-
   const handleSubmit = () => {
     if (validate()) {
       onSubmit?.(localSource);
@@ -188,9 +177,16 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
                   showConfirmModal(
                     'Please confirm that selected source will be deleted with the payments attached.',
                     async () => {
-                      const ok = await removePayment(source.id, payment.id);
-                      closeModal();
-                      if (ok ?? null) showModal('Payment deleted successfully.');
+                      if (localSource.type === 'income') {
+                        const ok = await removeIncomePayment(source.id, payment.id);
+                        closeModal();
+                        if (ok ?? null) showModal('Payment deleted successfully.');
+                      }
+                      if (localSource.type === 'outcome') {
+                        const ok = await removeOutcomePayment(source.id, payment.id);
+                        closeModal();
+                        if (ok ?? null) showModal('Payment deleted succesfully.');
+                      }
                     },
                     () => closeModal(),
                   );
@@ -240,6 +236,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
               open={showAddPaymentModal}
               onClose={() => setShowAddPaymentModal(false)}
               sourceId={localSource.id}
+              sourceType={localSource.type}
               onPaymentAdded={handlePaymentAdded}
             />
           </>

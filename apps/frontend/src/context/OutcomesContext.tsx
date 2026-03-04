@@ -12,13 +12,16 @@ type OutcomesContextType = {
   removeSource: (sourceId: string) => Promise<boolean>;
   loading: boolean;
   error: string | null;
-  addPayment: (sourceId: string, payment: FinancePayment) => Promise<FinancePayment | null>;
+  addPaymentToOutcomes: (
+    sourceId: string,
+    payment: FinancePayment,
+  ) => Promise<FinancePayment | null>;
   updatePayment: (
     sourceId: string,
     paymentId: string,
     payment: Partial<FinancePayment>,
   ) => Promise<FinancePayment | null>;
-  removePayment: (sourceId: string, paymentId: string) => Promise<boolean>;
+  removeOutcomePayment: (sourceId: string, paymentId: string) => Promise<boolean>;
 };
 
 const OutcomesContext = createContext<OutcomesContextType | undefined>(undefined);
@@ -136,6 +139,77 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
+  //---add payment---
+  const addPaymentToOutcomes = async (
+    sourceId: string,
+    payment: FinancePayment,
+  ): Promise<FinancePayment | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH}/api/outcomes/${sourceId}/payments`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify(payment),
+        },
+      );
+      if (!res.ok) {
+        throw new Error('Failed to add payment');
+      }
+      const payload = await res.json();
+      // backend create usually return one created payment object
+      const createdPayment: FinancePayment | null =
+        payload && payload.id ? payload : (payload?.newPayment ?? payload?.payment ?? null);
+      if (!createdPayment) return null;
+
+      setData((prev) =>
+        prev.map((src) =>
+          src.id === sourceId
+            ? { ...src, finance_payments: [...(src.finance_payments ?? []), createdPayment] }
+            : src,
+        ),
+      );
+      return createdPayment;
+    } catch (error: any) {
+      setError(error.message || 'Failed to add payment');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeOutcomePayment = async (sourceId: string, paymentId: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH}/api/outcomes/${sourceId}/payments/${paymentId}`,
+        { method: 'DELETE', headers: { 'Content-Type': 'applicaiton/json', ...getAuthHeader() } },
+      );
+      if (!res.ok) {
+        throw new Error('Failed to remove outcome payment');
+      }
+      setData((prev) =>
+        prev.map((src) =>
+          src.id === sourceId
+            ? {
+                ...src,
+                finance_payments: (src.finance_payments ?? []).filter((p) => p.id !== paymentId),
+              }
+            : src,
+        ),
+      );
+      return true;
+    } catch (error: any) {
+      setError(error.message || 'Failed to remove outcome payment');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <OutcomesContext.Provider
       value={{
@@ -146,9 +220,9 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         removeSource,
         loading,
         error,
-        addPayment: async () => null, // TODO: implement
+        addPaymentToOutcomes,
         updatePayment: async () => null, // TODO: implement
-        removePayment: async () => false, // TODO: implement
+        removeOutcomePayment,
       }}
     >
       {children}

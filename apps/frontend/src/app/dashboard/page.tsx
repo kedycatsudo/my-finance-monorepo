@@ -26,7 +26,6 @@ export default function Dashboard() {
   const allOutcomePayments = useMemo(() => flattenPayments(outcomes), [outcomes]);
   const allInvestmentPositions = useMemo(() => flattenInvestments(investments), [investments]);
   // For pie chart & summary
-  console.log(incomes);
   const totalIncomes = incomesArray.reduce(
     (sum: number, src: FinanceSource) =>
       sum + src.finance_payments.reduce((s: number, p: FinancePayment) => s + p.amount, 0),

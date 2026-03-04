@@ -8,8 +8,7 @@ import { ModalProvider } from '@/context/ModalContext';
 import AppModal from '@/components/modals/AppModal';
 import { ProfileProvider } from '@/context/ProfileContext';
 // Import ONLY from your generic context now!
-import { FinanceSourceProvider } from '@/context/FinanceSourceContext';
-import { IncomesProvider, InvestmentsProvider } from '@/context/FinanceGenericContext';
+import { InvestmentsProvider } from '@/context/FinanceGenericContext';
 import { OutcomesProvider2 } from '@/context/OutcomesContext';
 import { IncomesProvider2 } from '@/context/IncomesContext';
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -20,21 +19,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AuthProvider>
             <ThemeProvider>
               <ModalProvider>
-                <IncomesProvider>
-                  <IncomesProvider2>
-                    <OutcomesProvider2>
-                      <InvestmentsProvider>
-                        <FinanceSourceProvider type="default">
-                          {' '}
-                          {/* spelling! */}
-                          <Header />
-                          {children}
-                          <AppModal />
-                        </FinanceSourceProvider>
-                      </InvestmentsProvider>
-                    </OutcomesProvider2>
-                  </IncomesProvider2>
-                </IncomesProvider>
+                <IncomesProvider2>
+                  <OutcomesProvider2>
+                    <InvestmentsProvider>
+                      {' '}
+                      {/* spelling! */}
+                      <Header />
+                      {children}
+                      <AppModal />\{' '}
+                    </InvestmentsProvider>
+                  </OutcomesProvider2>
+                </IncomesProvider2>
               </ModalProvider>
             </ThemeProvider>
           </AuthProvider>

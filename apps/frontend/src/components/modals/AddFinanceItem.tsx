@@ -6,8 +6,10 @@ import { PAYMENT_FIELDS } from '@/constants/fieldConfig';
 import FieldInput from '../forms/FieldInput';
 import { useIncomesContext } from '@/context/IncomesContext';
 import { useModal } from '@/context/ModalContext';
+import { useOutcomesContext } from '@/context/OutcomesContext';
 type AddPaymentModalProps = {
   open: boolean;
+  sourceType: 'income' | 'outcome' | 'default';
   sourceId: string; // NEW: pass the source id where payment is being added
   onClose: () => void;
   onPaymentAdded?: (payment: FinancePayment) => void; // Callback after successful payment add
@@ -29,10 +31,12 @@ export default function AddPaymentModal({
   onClose,
   sourceId,
   onPaymentAdded,
+  sourceType,
 }: AddPaymentModalProps) {
   const [form, setForm] = useState<FinancePayment>(makeBlankPayment());
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
-  const { addPayment, loading, error } = useIncomesContext();
+  const { addPaymentToIncomes, loading, error } = useIncomesContext();
+  const { addPaymentToOutcomes } = useOutcomesContext();
   const { showModal } = useModal();
 
   useEffect(() => {
@@ -58,16 +62,27 @@ export default function AddPaymentModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (validate()) {
-      // Use context's addPayment for API then state update
-      const newPayment = await addPayment(sourceId, form);
+    if (!validate()) return;
 
+    if (sourceType === 'outcome') {
+      const newPayment = await addPaymentToOutcomes(sourceId, form);
       if (newPayment) {
-        onPaymentAdded?.(newPayment); // ← Call the callback to notify parent
-        showModal('Payment added succesfully.');
+        onPaymentAdded?.(newPayment);
+        showModal('Payment added successfully.');
         onClose();
       }
+      return;
     }
+    if (sourceType === 'income') {
+      const newPayment = await addPaymentToIncomes(sourceId, form);
+      if (newPayment) {
+        onPaymentAdded?.(newPayment);
+        showModal('Paymend added succusfully.');
+        onClose();
+      }
+      return;
+    }
+    showModal('Invalid source type');
   }
 
   if (!open) return null;

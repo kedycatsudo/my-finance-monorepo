@@ -36,7 +36,6 @@ export default function CreateSourceModal({ open, onClose, onSubmit }: Props) {
   }
 
   function handleSubmit(e: React.FormEvent) {
-    console.log(fields);
     e.preventDefault();
     if (!fields.name.trim()) {
       setError('Source Name is required');

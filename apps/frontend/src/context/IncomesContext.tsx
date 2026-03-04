@@ -11,13 +11,16 @@ type IncomesContextType = {
   removeSource: (sourceId: string) => Promise<boolean>;
   loading: boolean;
   error: string | null;
-  addPayment: (sourceId: string, payment: FinancePayment) => Promise<FinancePayment | null>;
+  addPaymentToIncomes: (
+    sourceId: string,
+    payment: FinancePayment,
+  ) => Promise<FinancePayment | null>;
   updatePayment: (
     sourceId: string,
     paymentId: string,
     payment: Partial<FinancePayment>,
   ) => Promise<FinancePayment | null>;
-  removePayment: (sourceId: string, paymentId: string) => Promise<boolean>;
+  removeIncomePayment: (sourceId: string, paymentId: string) => Promise<boolean>;
 };
 
 const IncomesContext = createContext<IncomesContextType | undefined>(undefined);
@@ -138,7 +141,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
 
   //---add payment---
   // apps/frontend/src/context/IncomesContext.tsx
-  const addPayment = async (
+  const addPaymentToIncomes = async (
     sourceId: string,
     payment: FinancePayment,
   ): Promise<FinancePayment | null> => {
@@ -245,7 +248,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   };
 
   //remove payment
-  const removePayment = async (sourceId: string, paymentId: string): Promise<boolean> => {
+  const removeIncomePayment = async (sourceId: string, paymentId: string): Promise<boolean> => {
     setLoading(true);
     setError(null);
     try {
@@ -288,9 +291,9 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         removeSource,
         loading,
         error,
-        addPayment,
+        addPaymentToIncomes,
         updatePayment,
-        removePayment,
+        removeIncomePayment,
       }}
     >
       {children}
