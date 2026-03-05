@@ -5,18 +5,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { sourceId, paymentId } = req.query;
 
   if (!sourceId || Array.isArray(sourceId)) {
-    return res.status(400).json({ message: 'sourceId is required' });
+    return res.status(400).json({ message: 'SourceId is required' });
   }
   if (!paymentId || Array.isArray(paymentId)) {
     return res.status(400).json({ message: 'paymentId is required' });
   }
-
   if (req.method !== 'PATCH' && req.method !== 'DELETE') {
     return res.status(405).json({ message: 'Method not allowed on this route' });
   }
-
-  const backendPath = `/api/incomes/sources/${sourceId}/payments/${paymentId}`;
-
+  const backendPath = `/api/outcomes/sources/${sourceId}/payments/${paymentId}`;
   const mappedBody =
     req.method === 'PATCH'
       ? {
@@ -29,15 +26,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     method: req.method,
     body: mappedBody ? JSON.stringify(mappedBody) : undefined,
   });
-
   res.status(backendRes.status);
   backendRes.headers.forEach((val, key) => res.setHeader(key, val));
-
   const raw = await backendRes.text();
 
   try {
     const parsed = JSON.parse(raw);
-
     const mapPayment = (p: any) =>
       p
         ? {
@@ -47,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         : p;
 
-    // common backend shape: { message, updated } OR { message, updated_source }
+    // common bakend shape:{mesage,updated} OR {message,updated_source}
     const updatedPayment = mapPayment(parsed?.updated ?? parsed?.updated_payment ?? null);
 
     const transformed =
@@ -64,7 +58,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 : parsed.updated_source,
           }
         : parsed;
-
     return res.send(JSON.stringify(transformed));
   } catch {
     return res.send(raw);

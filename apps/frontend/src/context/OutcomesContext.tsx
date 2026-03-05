@@ -187,9 +187,10 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_PATH}/api/outcomes/${sourceId}/payments/${paymentId}`,
-        { method: 'DELETE', headers: { 'Content-Type': 'applicaiton/json', ...getAuthHeader() } },
+        { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...getAuthHeader() } },
       );
       if (!res.ok) {
+        console.log(res.body);
         throw new Error('Failed to remove outcome payment');
       }
       setData((prev) =>
@@ -205,6 +206,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       return true;
     } catch (error: any) {
       setError(error.message || 'Failed to remove outcome payment');
+      console.log(error);
       return false;
     } finally {
       setLoading(false);
