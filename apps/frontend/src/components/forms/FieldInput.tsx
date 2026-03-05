@@ -29,6 +29,9 @@ export default function FieldInput({
           onChange={(e) => onChange(e.target.value)}
           className="rounded border px-2 py-1 mt-1 w-full text-black"
         >
+          <option value="" disabled>
+            Select {label}
+          </option>
           {enumOptions.map((opt) => (
             <option key={opt} value={opt}>
               {opt}

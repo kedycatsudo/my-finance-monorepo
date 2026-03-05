@@ -260,7 +260,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         },
       );
       if (!res.ok) {
-        throw new Error('Failed to remove payment');
+        throw new Error('Failed to remove income payment');
       }
       setData((prev) =>
         prev.map((src) =>

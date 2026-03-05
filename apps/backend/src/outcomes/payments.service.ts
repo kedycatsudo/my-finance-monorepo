@@ -27,6 +27,7 @@ export class OutcomesPaymentService {
         payment_type:
           (dto.payment_type as $Enums.payment_type) ?? $Enums.payment_type,
         financesource_id: sourceId,
+        payment_circle_date: dto.payment_circle_date,
       },
     });
   }
