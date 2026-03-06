@@ -7,6 +7,28 @@ import { UpdateOutcomePaymentDto } from './dto/update-payment.dto';
 export class OutcomesPaymentService {
   constructor(private prisma: PrismaService) {}
 
+  private normalizeDate(value?: string | Date | null): Date | null | undefined {
+    if (value === undefined) return undefined;
+    if (value === null || value === '') return null;
+    if (value instanceof Date) return value;
+
+    const str = String(value).trim();
+
+    if (str.includes('T')) {
+      const isoDate = new Date(str);
+      if (Number.isNaN(isoDate.getTime())) {
+        throw new Error('Invalid date format');
+      }
+      return isoDate;
+    }
+
+    const dateOnly = new Date(`${str}T00:00:00.000Z`);
+    if (Number.isNaN(dateOnly.getTime())) {
+      throw new Error('Invalid date format');
+    }
+    return dateOnly;
+  }
+
   async createPayment(
     userId: string,
     sourceId: string,
@@ -17,17 +39,21 @@ export class OutcomesPaymentService {
     });
     if (!source) throw new Error('Source not found or unautharized.');
 
+    const normalizedDate = this.normalizeDate(dto.date);
+
     return this.prisma.financePayments.create({
       data: {
         name: dto.name,
         user_id: userId,
         amount: dto.amount,
         loop: dto.loop,
-        status: (dto.status as $Enums.payment_status) ?? $Enums.payment_status,
+        status:
+          (dto.status as $Enums.payment_status) ?? $Enums.payment_status.coming,
         payment_type:
-          (dto.payment_type as $Enums.payment_type) ?? $Enums.payment_type,
+          (dto.payment_type as $Enums.payment_type) ??
+          $Enums.payment_type.credit,
         financesource_id: sourceId,
-        payment_circle_date: dto.payment_circle_date,
+        date: normalizedDate ?? null,
       },
     });
   }
@@ -63,8 +89,7 @@ export class OutcomesPaymentService {
     if (dto.amount !== undefined) updateData.amount = dto.amount;
     if (dto.payment_type !== undefined)
       updateData.payment_type = dto.payment_type as $Enums.payment_type;
-    if (dto.payment_circle_date !== undefined)
-      updateData.payment_circle_date = dto.payment_circle_date;
+    if (dto.date !== undefined) updateData.date = this.normalizeDate(dto.date);
     if (dto.loop !== undefined) updateData.loop = dto.loop;
     if (dto.status !== undefined)
       updateData.status = dto.status as $Enums.payment_status;

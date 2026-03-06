@@ -22,7 +22,6 @@ export class CreataIncomePaymentDto {
   @IsString()
   status!: string;
 
-  @IsOptional()
   @IsString()
-  payment_circle_date?: string;
+  date!: string;
 }

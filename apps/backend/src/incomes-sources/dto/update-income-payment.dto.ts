@@ -23,5 +23,5 @@ export class UpdateIncomePaymentDto {
 
   @IsOptional()
   @IsString()
-  payment_circle_date?: string;
+  date?: string;
 }

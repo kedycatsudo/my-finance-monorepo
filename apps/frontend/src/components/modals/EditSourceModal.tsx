@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useRef, useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { FinancePayment, FinanceSource } from '@/types/finance';
 import { InvestmentSource } from '@/types/investments';
 import { PAYMENT_FIELDS, ITEM_FIELDS } from '@/constants/fieldConfig';
@@ -27,10 +27,8 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showAddInvestmentItemModal, setShowAddInvestmentItemModal] = useState(false);
   const { showModal, showConfirmModal, closeModal } = useModal();
-  const { removeIncomePayment, updatePayment } = useIncomesContext();
+  const { removeIncomePayment } = useIncomesContext();
   const { removeOutcomePayment } = useOutcomesContext();
-
-  const pendingChanges = useRef<Record<string, Partial<FinancePayment>>>({});
   // Sync localSource when payment is added
   const sourceId = source.id;
 
@@ -39,16 +37,6 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
     setOpenItemAccordions({});
     setErrors({});
   }, [source, open]);
-
-  const handleItemBlur = async (itemId: string) => {
-    if (!isFinanceSource(localSource)) return;
-
-    const patch = pendingChanges.current[itemId];
-    if (!patch || Object.keys(patch).length === 0) return;
-
-    await updatePayment(localSource.id, itemId, patch); //API call only blur
-    delete pendingChanges.current[itemId];
-  };
 
   const handlePaymentAdded = (created: FinancePayment) => {
     setLocalSource((prev) =>
@@ -90,12 +78,6 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
           }
         : prev,
     );
-
-    //track dirt field for this payment (no network call here)
-    pendingChanges.current[itemId] = {
-      ...(pendingChanges.current[itemId] ?? {}),
-      [field]: value,
-    };
   };
 
   function validate() {
@@ -198,7 +180,6 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
                   }))
                 }
                 handleItemInput={handleItemInput}
-                handleItemBlur={(itemId) => handleItemBlur(itemId)} // <-- add this
                 errors={errors}
               />
             ))}
@@ -218,7 +199,6 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
                   }))
                 }
                 handleItemInput={handleItemInput}
-                handleItemBlur={(itemId) => handleItemBlur(itemId)}
                 errors={errors}
               />
             ))}

@@ -14,7 +14,7 @@ export function RecentPaid({ data }: DataCalculationProps): RecentSideInfoItem[]
       Array.isArray(outcome?.finance_payments) ? outcome.finance_payments : [],
     )
     .filter((payment): payment is FinancePayment => Boolean(payment))
-    .filter((payment) => (payment.status = 'paid'))
+    .filter((payment) => payment.status === 'paid')
     .map((p) => ({
       name: p.name,
       data: p.amount,

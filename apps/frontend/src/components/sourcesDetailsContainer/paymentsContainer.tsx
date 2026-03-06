@@ -17,6 +17,15 @@ function isFinancePayment(p: FinancePayment | InvestmentItem): p is FinancePayme
 }
 
 export default function PaymentsContainer({ payment, open, onClick }: PaymentsContainerProps) {
+  const formatDateDisplay = (value: unknown) => {
+    if (value == null) return '--';
+    const raw = String(value);
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+    return parsed.toISOString().slice(0, 10);
+  };
+
   // Define field labels for both types
   const financeFieldLabels: { [K in keyof FinancePayment]?: string } = {
     name: 'Name',
@@ -89,13 +98,15 @@ export default function PaymentsContainer({ payment, open, onClick }: PaymentsCo
                 ? value
                   ? 'Yes'
                   : 'No'
-                : field === 'amount' || field === 'investedAmount' || field === 'resultAmount'
-                  ? value != null
-                    ? `${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })} $`
-                    : '--'
-                  : value != null
-                    ? String(value)
-                    : '--';
+                : field === 'date' || field === 'entryDate' || field === 'exitDate'
+                  ? formatDateDisplay(value)
+                  : field === 'amount' || field === 'investedAmount' || field === 'resultAmount'
+                    ? value != null
+                      ? `${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })} $`
+                      : '--'
+                    : value != null
+                      ? String(value)
+                      : '--';
 
             return <PaymentField key={field} field={label!} name={displayValue} />;
           })}

@@ -23,8 +23,27 @@ export default function FinancialSnapShot({
   className = '',
 }: FinancialSnapShotProps) {
   const total = items.reduce((sum, item) => sum + item.data, 0);
+  const toSortTime = (value?: string | number) => {
+    if (!value) return 0;
+    const raw = String(value);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return new Date(`${raw}T00:00:00.000Z`).getTime();
+    }
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+  };
+
+  const formatDate = (value?: string | number) => {
+    if (!value) return '';
+    const raw = String(value);
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+    return parsed.toISOString().slice(0, 10);
+  };
+
   const sortedItems = [...items]
-    .sort((a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime())
+    .sort((a, b) => toSortTime(b.date) - toSortTime(a.date))
     .slice(0, 5);
   return (
     <div
@@ -45,13 +64,9 @@ export default function FinancialSnapShot({
                 </span>
                 {item.date && (
                   <span className="mt-0.5 bg-[#29388A] bg-opacity-60 border border-[#29388A] rounded px-2 py-0.5 font-bold text-s xs:text-xl shadow-inner text-[#a9deff]">
-                    {item.date ? item.date : ''}
+                    {formatDate(item.date)}
                   </span>
                 )}
-                {/* <span className="mt-0.5 bg-[#29388A] bg-opacity-60 border border-[#29388A] rounded px-2 py-0.5 font-bold text-[#a9deff] text-s xs:text-xl shadow-inner">
-                  {new Date(item.date).toLocaleDateString()}
-                  
-                </span> */}
               </div>
             </div>
 

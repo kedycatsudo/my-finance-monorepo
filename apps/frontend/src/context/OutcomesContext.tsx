@@ -157,6 +157,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         },
       );
       if (!res.ok) {
+        console.log(res);
         throw new Error('Failed to add payment');
       }
       const payload = await res.json();
@@ -175,6 +176,66 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       return createdPayment;
     } catch (error: any) {
       setError(error.message || 'Failed to add payment');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePayment = async (
+    sourceId: string,
+    paymentId: string,
+    payment: Partial<FinancePayment>,
+  ): Promise<FinancePayment | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH}/api/outcomes/${sourceId}/payments/${paymentId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify(payment ?? {}),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error('Failed to update payment');
+      }
+
+      const response = await res.json();
+
+      setData((prev) =>
+        prev.map((src) => {
+          if (src.id !== sourceId) return src;
+
+          if (response.updated_source?.finance_payments) {
+            return { ...src, finance_payments: response.updated_source.finance_payments };
+          }
+
+          if (response.updated_payment) {
+            return {
+              ...src,
+              finance_payments: (src.finance_payments ?? []).map((p) =>
+                p.id === paymentId ? response.updated_payment : p,
+              ),
+            };
+          }
+
+          return src;
+        }),
+      );
+
+      const updatedPayment =
+        response.updated_source?.finance_payments?.find(
+          (p: FinancePayment) => p.id === paymentId,
+        ) ||
+        response.updated_payment ||
+        null;
+
+      return updatedPayment;
+    } catch (error: any) {
+      setError(error.message || 'Failed to update payment');
       return null;
     } finally {
       setLoading(false);
@@ -223,7 +284,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         loading,
         error,
         addPaymentToOutcomes,
-        updatePayment: async () => null, // TODO: implement
+        updatePayment,
         removeOutcomePayment,
       }}
     >

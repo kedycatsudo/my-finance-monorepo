@@ -21,7 +21,7 @@ export class UpdateOutcomePaymentDto {
 
   @IsOptional()
   @IsDateString()
-  payment_circle_date?: string;
+  date?: string;
 
   @IsOptional()
   @IsBoolean()

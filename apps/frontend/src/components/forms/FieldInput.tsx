@@ -19,6 +19,16 @@ export default function FieldInput({
   err,
   onBlur,
 }: FieldInputProps) {
+  const toDateInputValue = (dateValue: any) => {
+    if (!dateValue) return '';
+    if (dateValue instanceof Date) return dateValue.toISOString().slice(0, 10);
+    const raw = String(dateValue);
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return parsed.toISOString().slice(0, 10);
+  };
+
   if (enumOptions)
     return (
       <label className="block">
@@ -27,6 +37,7 @@ export default function FieldInput({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           className="rounded border px-2 py-1 mt-1 w-full text-black"
         >
           <option value="" disabled>
@@ -50,6 +61,7 @@ export default function FieldInput({
           type="checkbox"
           checked={!!value}
           onChange={(e) => onChange(e.target.checked)}
+          onBlur={onBlur}
         ></input>
       </label>
     );
@@ -59,7 +71,7 @@ export default function FieldInput({
       {label}
       <input
         type={type || 'text'}
-        value={type === 'date' && value ? String(value).slice(0, 10) : (value ?? '')}
+        value={type === 'date' ? toDateInputValue(value) : (value ?? '')}
         onChange={(e) =>
           onChange(
             type === 'number'

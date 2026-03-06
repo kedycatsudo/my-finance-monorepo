@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     req.method === 'POST'
       ? {
           ...req.body,
-          payment_circle_date: req.body?.payment_circle_date ?? req.body?.date ?? null,
+          date: req.body?.date ?? req.body?.payment_circle_date ?? null,
         }
       : undefined;
 
@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         payment?.amount !== undefined && payment?.amount !== null
           ? Number(payment.amount)
           : payment?.amount,
-      date: payment?.payment_circle_date ?? payment?.date ?? '',
+      date: payment?.date ?? payment?.payment_circle_date ?? '',
     });
     let transformed;
     if (Array.isArray(parsed)) {

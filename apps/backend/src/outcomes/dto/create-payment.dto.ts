@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsBoolean,
-  IsOptional,
-  IsDate,
-} from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsDateString } from 'class-validator';
 
 export class CreateOutcomePaymentDto {
   @IsString()
@@ -22,6 +16,6 @@ export class CreateOutcomePaymentDto {
   @IsString()
   status!: string;
 
-  @IsDate()
-  payment_circle_date!: string;
+  @IsDateString()
+  date!: string;
 }

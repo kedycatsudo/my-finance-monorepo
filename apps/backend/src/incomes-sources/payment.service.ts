@@ -8,9 +8,7 @@ import { UpdateIncomePaymentDto } from './dto/update-income-payment.dto';
 export class IncomesPaymentService {
   constructor(private prisma: PrismaService) {}
 
-  private normalizePaymentCircleDate(
-    value?: string | Date | null,
-  ): Date | null | undefined {
+  private normalizeDate(value?: string | Date | null): Date | null | undefined {
     if (value === undefined) return undefined; // not provided (update flow)
     if (value === null || value === '') return null; // explicit clear
     if (value instanceof Date) return value;
@@ -21,7 +19,7 @@ export class IncomesPaymentService {
     if (str.includes('T')) {
       const isoDate = new Date(str);
       if (Number.isNaN(isoDate.getTime())) {
-        throw new Error('Invalid payment_circle_date format');
+        throw new Error('Invalid date format');
       }
       return isoDate;
     }
@@ -29,7 +27,7 @@ export class IncomesPaymentService {
     // Date-only (YYYY-MM-DD) -> midnight UTC
     const dateOnly = new Date(`${str}T00:00:00.000Z`);
     if (Number.isNaN(dateOnly.getTime())) {
-      throw new Error('Invalid payment_circle_date format');
+      throw new Error('Invalid date format');
     }
     return dateOnly;
   }
@@ -42,9 +40,7 @@ export class IncomesPaymentService {
     const source = await this.prisma.financeSources.findFirst({
       where: { id: sourceId, user_id: userId, type: 'income' },
     });
-    const normalizedPaymentCircleDate = this.normalizePaymentCircleDate(
-      dto.payment_circle_date,
-    );
+    const normalizedDate = this.normalizeDate(dto.date);
     if (!source) throw new Error('Source not found or unauthorized.');
     const newPayment = await this.prisma.financePayments.create({
       data: {
@@ -57,7 +53,7 @@ export class IncomesPaymentService {
           (dto.payment_type as $Enums.payment_type) ??
           $Enums.payment_type.credit,
         financesource_id: sourceId,
-        payment_circle_date: normalizedPaymentCircleDate ?? null,
+        date: normalizedDate ?? null,
       },
     });
     return newPayment;
@@ -97,10 +93,8 @@ export class IncomesPaymentService {
     if (dto.status !== undefined)
       updateData.status = dto.status as $Enums.payment_status;
     updateData.financesource_id = sourceId;
-    if (dto.payment_circle_date !== undefined) {
-      updateData.payment_circle_date = this.normalizePaymentCircleDate(
-        dto.payment_circle_date,
-      );
+    if (dto.date !== undefined) {
+      updateData.date = this.normalizeDate(dto.date);
     }
     return this.prisma.financePayments.update({
       where: { id: paymentId },

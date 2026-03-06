@@ -12,8 +12,25 @@ type RecentSideInfoProps = {
 export default function RecentSideInfo({ header, items, className = '' }: RecentSideInfoProps) {
   const total = items.reduce((sum, item) => sum + Number(item.data), 0);
 
+  const toSortTime = (value?: string) => {
+    if (!value) return 0;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return new Date(`${value}T00:00:00.000Z`).getTime();
+    }
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+  };
+
+  const formatDate = (value?: string) => {
+    if (!value) return '';
+    if (/^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toISOString().slice(0, 10);
+  };
+
   const sortedItems = [...items]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort((a, b) => toSortTime(b.date) - toSortTime(a.date))
     .slice(0, 5);
   return (
     <div className={`flex-1 w-full ${className}`}>
@@ -34,7 +51,7 @@ export default function RecentSideInfo({ header, items, className = '' }: Recent
                     {item.unit ? item.unit : ''}
                   </span>
                   <span className="mt-0.5 bg-[#29388A] bg-opacity-60 border border-[#29388A] rounded px-2 py-0.5 font-bold text-[#a9deff] text-s xs:text-xl shadow-inner">
-                    {item.date ? new Date(item.date).toLocaleDateString() : ''}
+                    {formatDate(item.date)}
                   </span>
                 </div>
               </div>

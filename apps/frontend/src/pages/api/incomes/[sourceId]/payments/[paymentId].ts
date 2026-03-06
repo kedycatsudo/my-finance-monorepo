@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     req.method === 'PATCH'
       ? {
           ...req.body,
-          payment_circle_date: req.body?.payment_circle_date ?? req.body?.date ?? undefined,
+          date: req.body?.date ?? req.body?.payment_circle_date ?? undefined,
         }
       : undefined;
 
@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? {
             ...p,
             amount: p.amount != null ? Number(p.amount) : p.amount,
-            date: p.payment_circle_date ?? p.date ?? '',
+            date: p.date ?? p.payment_circle_date ?? '',
           }
         : p;
 

@@ -1,4 +1,12 @@
 // Utility for incomes/outcomes
+function toSortTime(value: string): number {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(`${value}T00:00:00.000Z`).getTime();
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
 export function flattenPayments<
   S extends { name?: string; sourceName?: string; finance_paymens?: P[]; payments?: P[] },
   P extends {
@@ -25,7 +33,7 @@ export function flattenPayments<
         payment_type: p.payment_type ?? p.type ?? '',
       }));
     })
-    .sort((a, b) => new Date(String(b.date)).getTime() - new Date(String(a.date)).getTime());
+    .sort((a, b) => toSortTime(String(b.date)) - toSortTime(String(a.date)));
 }
 
 // Utility for investments (for your InvestmentSource shape)
