@@ -9,8 +9,8 @@ import CatchUpTheMonth from '@/components/outcomes/catchUpTheMonth';
 import SourcesDetailsContainer from '@/components/sourcesDetailsContainer/sourcesDetailsContainer';
 import SourcesList from '@/components/SourcesList';
 import { usePathname } from 'next/navigation';
-import { useInvestmentsContext } from '@/context/FinanceGenericContext';
-import { InvestmentSource, InvestmentItem } from '@/types/investments';
+import { useInvestmentsContext } from '@/context/InvestmentContext';
+import { InvestmentSource } from '@/types/investments';
 import EditSourceModal from '@/components/modals/EditSourceModal';
 import SourceContainer from '@/components/sourcesDetailsContainer/sourceContainer';
 import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
@@ -27,19 +27,6 @@ import {
   OpenPositionsAmount,
   ClosedPositionsAmount,
 } from '@/utils/functions/dataCalculations/investmentDataCalculations';
-
-// -- HELPERS
-function fromSourceBaseToInvestmentSource(
-  base: Omit<SourceBase, 'id'> & { sourceType: 'investment' },
-  id: string,
-): InvestmentSource {
-  return {
-    ...base,
-    id,
-    items: [] as InvestmentItem[], // Explicitly type the empty array
-    type: 'investment',
-  };
-}
 
 export default function Investments() {
   const pathName = usePathname();
@@ -94,9 +81,6 @@ export default function Investments() {
   }
   if (error) {
     return <div>Error: {error}</div>;
-  }
-  if (!investments || investments.length === 0) {
-    return <div>No investments found</div>;
   }
 
   // Prepare chart/summary data as before...
@@ -199,9 +183,9 @@ export default function Investments() {
               open={editModalOpen}
               source={editSource}
               onClose={() => setEditModalOpen(false)}
-              onSubmit={(updatedSource) => {
+              onSubmit={async (updatedSource) => {
                 if ('items' in updatedSource) {
-                  updateSource(updatedSource);
+                  await updateSource(updatedSource);
                 }
                 setEditModalOpen(false);
               }}
@@ -211,11 +195,12 @@ export default function Investments() {
             <CreateSourceModal
               open={addSourceModalOpen}
               onClose={() => setAddSourceModalOpen(false)}
-              onSubmit={(fields) => {
-                const id = Date.now().toString() + Math.random().toString(36).slice(2);
-                addSource(
-                  fromSourceBaseToInvestmentSource({ ...fields, sourceType: newSourceType }, id),
-                );
+              onSubmit={async (fields) => {
+                await addSource({
+                  name: fields.name,
+                  description: fields.description,
+                  type: newSourceType,
+                });
                 setAddSourceModalOpen(false);
               }}
             />

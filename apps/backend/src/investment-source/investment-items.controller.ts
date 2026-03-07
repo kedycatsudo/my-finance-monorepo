@@ -19,7 +19,7 @@ interface AuthenticatedRequest extends ExpressRequest {
   user: { userId: string; username: string };
 }
 
-@Controller('investment-sources/:sourceId/items')
+@Controller('investment/:sourceId/items')
 @UseGuards(JwtAuthGuard)
 export class InvestmentItemsController {
   constructor(private readonly service: InvestmentItemsService) {}
