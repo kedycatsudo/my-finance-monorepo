@@ -23,7 +23,7 @@ type InvestmentContextType = {
   fetchSources: () => Promise<void>;
   addSource: (source: InvestmentSourceInput) => Promise<InvestmentSource | null>;
   updateSource: (source: InvestmentSource) => Promise<InvestmentSource | null>;
-  removeSource: (sourceId: string) => Promise<void>;
+  removeSource: (sourceId: string) => Promise<boolean>;
 
   addItem: (sourceId: string, item: Omit<InvestmentItem, 'id'>) => Promise<InvestmentItem | null>;
   updateItem: (
@@ -173,6 +173,68 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
+  const updateSource = async (source: InvestmentSource): Promise<InvestmentSource | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${getApiBase()}/api/investment/${source.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAutheader() },
+        body: JSON.stringify({
+          name: source.name,
+          description: source.description ?? '',
+          type: source.type,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to update investment source');
+
+      const updatedApi = await res.json();
+
+      let updatedSource: InvestmentSource | null = null;
+      setData((prev) =>
+        prev.map((src) => {
+          if (src.id !== source.id) return src;
+          updatedSource = {
+            ...src,
+            name: updatedApi.name ?? src.name,
+            description: updatedApi.description ?? src.description,
+            type: (updatedApi.type as InvestmentSource['type']) ?? src.type,
+          };
+          return updatedSource;
+        }),
+      );
+
+      return updatedSource;
+    } catch (err: any) {
+      setError(err.message || 'Failed to update investment source');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeSource = async (sourceId: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${getApiBase()}/api/investment/${sourceId}`, {
+        method: 'DELETE',
+        headers: { ...getAutheader() },
+      });
+
+      if (!res.ok) throw new Error('Failed to remove investment source');
+
+      setData((prev) => prev.filter((s) => s.id !== sourceId));
+      return true;
+    } catch (err: any) {
+      setError(err.message || 'Failed to remove investment source');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <InvestmentContext.Provider
       value={{
@@ -182,8 +244,8 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         loading,
         fetchSources,
         addSource,
-        updateSource: async () => null,
-        removeSource: async () => {},
+        updateSource,
+        removeSource,
         addItem: async () => null,
         updateItem: async () => null,
         removeItem: async () => false,

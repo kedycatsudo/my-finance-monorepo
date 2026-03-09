@@ -27,13 +27,22 @@ import {
   OpenPositionsAmount,
   ClosedPositionsAmount,
 } from '@/utils/functions/dataCalculations/investmentDataCalculations';
+import { useModal } from '@/context/ModalContext';
 
 export default function Investments() {
   const pathName = usePathname();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSource, setEditSource] = useState<InvestmentSource | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
-  const { data: investments, updateSource, addSource, loading, error } = useInvestmentsContext();
+  const { showModal, showConfirmModal, closeModal } = useModal();
+  const {
+    data: investments,
+    updateSource,
+    addSource,
+    loading,
+    error,
+    removeSource,
+  } = useInvestmentsContext();
   const catchUpTheMonth = [
     {
       name: 'Profits this month',
@@ -170,6 +179,17 @@ export default function Investments() {
                 item={item}
                 open={open}
                 onClick={onClick}
+                onDelete={() => {
+                  showConfirmModal(
+                    'Please confirm that selected source will be deleted with the items attached',
+                    async () => {
+                      const ok = await removeSource(item.id);
+                      closeModal();
+                      if (ok ?? null) showModal('Source deleted succesfully.');
+                    },
+                    () => closeModal(),
+                  );
+                }}
                 onEdit={() => {
                   setEditSource(item);
                   setEditModalOpen(true);
@@ -186,7 +206,9 @@ export default function Investments() {
               onSubmit={async (updatedSource) => {
                 if ('items' in updatedSource) {
                   await updateSource(updatedSource);
+                  showModal('Source updated succesfully.');
                 }
+
                 setEditModalOpen(false);
               }}
             />
