@@ -8,12 +8,11 @@ import FieldInput from '../forms/FieldInput';
 type AddInvestmentItemModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (item: InvestmentItem) => void;
+  onSubmit: (item: Omit<InvestmentItem, 'id'>) => void;
 };
 
-function makeBlankInvestmentItem(): InvestmentItem {
+function makeBlankInvestmentItem(): Omit<InvestmentItem, 'id'> {
   return {
-    id: Date.now().toString() + Math.random().toString(36).slice(2),
     assetName: '',
     term: 'short',
     investedAmount: 0,
@@ -30,7 +29,7 @@ export default function AddInvestmentItemModal({
   onClose,
   onSubmit,
 }: AddInvestmentItemModalProps) {
-  const [form, setForm] = useState<InvestmentItem>(makeBlankInvestmentItem());
+  const [form, setForm] = useState<Omit<InvestmentItem, 'id'>>(makeBlankInvestmentItem());
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
 
   useEffect(() => {
@@ -77,8 +76,8 @@ export default function AddInvestmentItemModal({
               label={f.label}
               type={f.type}
               enumOptions={f.enumOptions}
-              value={form[f.field as keyof InvestmentItem]}
-              onChange={(v) => handleInput(f.field as keyof InvestmentItem, v)}
+              value={form[f.field as keyof Omit<InvestmentItem, 'id'>]}
+              onChange={(v) => handleInput(f.field as keyof Omit<InvestmentItem, 'id'>, v)}
               err={errors[f.field]}
             />
           ))}

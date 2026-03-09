@@ -1,6 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { proxyToBackend } from '@/utils/proxyToBackend';
 
+function dateOnlyToIso(value?: string | null) {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  if (value.includes('T')) return value;
+  return `${value}T00:00:00.000Z`;
+}
+
 function mapItemFromBackend(item: any) {
   return {
     id: item?.id,
@@ -16,7 +23,7 @@ function mapItemFromBackend(item: any) {
     resultAmount:
       item?.result_amount !== undefined && item?.result_amount !== null
         ? Number(item.result_amount)
-        : item?.resultAmount !== undefined && item?.result_amount !== null
+        : item?.resultAmount !== undefined && item?.resultAmount !== null
           ? Number(item.resultAmount)
           : null,
     status: item?.status ?? 'open',
@@ -26,7 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { sourceId } = req.query;
 
   if (!sourceId || Array.isArray(sourceId)) {
-    return res.status(400).json({ message: 'Method now allowed this route' });
+    return res.status(400).json({ message: 'sourceId is required' });
+  }
+
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed on this route' });
   }
 
   const backendPath = `/api/investment/${sourceId}/items`;
@@ -39,13 +50,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             req.body?.investedAmount !== undefined
               ? Number(req.body?.investedAmount)
               : Number(req.body?.invested_amount ?? 0),
-          entry_date: req.body?.entryDate ?? req.body?.entry_date,
-          exit_date: req.body?.exitDate ?? req.body?.exit_date ?? null,
+          entry_date: dateOnlyToIso(req.body?.entryDate ?? req.body?.entry_date),
+          exit_date: dateOnlyToIso(req.body?.exitDate ?? req.body?.exit_date ?? null),
           result: req.body?.result,
           result_amount:
             req.body?.resultAmount !== undefined && req.body?.resultAmount !== null
               ? Number(req.body.resultAmount)
-              : req.body?.result_amount !== undefined && req.body?.resut_amount !== null
+              : req.body?.result_amount !== undefined && req.body?.result_amount !== null
                 ? Number(req.body.result_amount)
                 : null,
           status: req.body?.status,

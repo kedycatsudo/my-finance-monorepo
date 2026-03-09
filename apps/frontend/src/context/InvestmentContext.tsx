@@ -18,7 +18,7 @@ type InvestmentContextType = {
   data: InvestmentSource[];
   setData: React.Dispatch<React.SetStateAction<InvestmentSource[]>>;
   loading: boolean;
-  error: string;
+  error: string | null;
 
   fetchSources: () => Promise<void>;
   addSource: (source: InvestmentSourceInput) => Promise<InvestmentSource | null>;
@@ -235,6 +235,113 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
+  const fetchItemsBySource = async (sourceId: string): Promise<InvestmentItem[]> => {
+    try {
+      const res = await fetch(`${getApiBase()}/api/investment/${sourceId}/items`, {
+        method: 'GET',
+        headers: { ...getAutheader() },
+      });
+      if (!res.ok) throw new Error('Failed to fetch items for source');
+      const payload = await res.json();
+      const items = Array.isArray(payload) ? payload.map(toInvestmentItem) : [];
+      setData((prev) => prev.map((src) => (src.id === sourceId ? { ...src, items } : src)));
+      return items;
+    } catch (error: any) {}
+    return [];
+  };
+
+  const addItem = async (
+    sourceId: string,
+    item: Omit<InvestmentItem, 'id'>,
+  ): Promise<InvestmentItem | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${getApiBase()}/api/investment/${sourceId}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAutheader() },
+        body: JSON.stringify(toCreateItemBody(item)),
+      });
+      if (!res.ok) throw new Error('Failed to add investment item');
+      const created = toInvestmentItem(await res.json());
+
+      setData((prev) =>
+        prev.map((src) =>
+          src.id === sourceId ? { ...src, items: [...(src.items ?? []), created] } : src,
+        ),
+      );
+      return created;
+    } catch (error: any) {
+      setError(error.message || 'Failed to add investment item');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateItem = async (
+    sourceId: string,
+    itemId: string,
+    item: Partial<InvestmentItem>,
+  ): Promise<InvestmentItem | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${getApiBase()}/api/investment/${getAutheader()}/${sourceId}/items/${itemId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAutheader() },
+          body: JSON.stringify(toUpdateItemBody(item)),
+        },
+      );
+
+      if (!res.ok) throw new Error('Failed to update investement item');
+      const updated = toInvestmentItem(await res.json());
+      setData((prev) =>
+        prev.map((src) =>
+          src.id === sourceId
+            ? {
+                ...src,
+                items: (src.items ?? []).map((i) => (i.id === itemId ? updated : i)),
+              }
+            : src,
+        ),
+      );
+      return updated;
+    } catch (error: any) {
+      setError(error.message || 'Failed to update investment item');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+  const removeItem = async (sourceId: string, itemId: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${getApiBase()}/api/investment/${sourceId}/items/${itemId}`, {
+        method: 'DELETE',
+        headers: { ...getAutheader() },
+      });
+      if (!res.ok) throw new Error('Failed to remove investment item.');
+      setData((prev) =>
+        prev.map((src) =>
+          src.id === sourceId
+            ? { ...src, items: (src.items ?? []).filter((i) => i.id !== itemId) }
+            : src,
+        ),
+      );
+      return true;
+    } catch (error: any) {
+      setError(error.message || 'Failed to remove investment item.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <InvestmentContext.Provider
       value={{
@@ -246,10 +353,10 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         addSource,
         updateSource,
         removeSource,
-        addItem: async () => null,
-        updateItem: async () => null,
-        removeItem: async () => false,
-        fetchItemsBySource: async () => [],
+        addItem,
+        updateItem,
+        removeItem,
+        fetchItemsBySource,
       }}
     >
       {children}

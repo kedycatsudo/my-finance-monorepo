@@ -1,8 +1,8 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FinancePayment, FinanceSource } from '@/types/finance';
-import { InvestmentSource } from '@/types/investments';
+import { InvestmentSource, InvestmentItem } from '@/types/investments';
 import { PAYMENT_FIELDS, ITEM_FIELDS } from '@/constants/fieldConfig';
 import FieldInput from '../forms/FieldInput';
 import AccordionItem from '../forms/AccordionItem';
@@ -11,6 +11,7 @@ import AddInvestmentItemModal from './AddInvestmentItem';
 import AddPaymentModal from './AddFinanceItem';
 import { useIncomesContext } from '@/context/IncomesContext';
 import { useOutcomesContext } from '@/context/OutcomesContext';
+import { useInvestmentsContext } from '@/context/InvestmentContext';
 import { useModal } from '@/context/ModalContext';
 type EditSourceModalProps = {
   open: boolean;
@@ -29,8 +30,8 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const { showModal, showConfirmModal, closeModal } = useModal();
   const { removeIncomePayment } = useIncomesContext();
   const { removeOutcomePayment } = useOutcomesContext();
+  const { addItem, updateItem, removeItem } = useInvestmentsContext();
   // Sync localSource when payment is added
-  const sourceId = source.id;
 
   useEffect(() => {
     setLocalSource(source);
@@ -38,6 +39,33 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
     setErrors({});
   }, [source, open]);
 
+  const handleInvestmentItemAdded = async (newItem: InvestmentItem) => {
+    if (!isInvestmentSource(localSource)) return;
+    const payload = {
+      assetName: newItem.assetName,
+      term: newItem.term,
+      investedAmount: Number(newItem.investedAmount),
+      entryDate: newItem.entryDate,
+      exitDate: newItem.exitDate || null,
+      result: newItem.result,
+      resultAmount: newItem.resultAmount,
+      status: newItem.status,
+    };
+    const created = await addItem(localSource.id, payload);
+    if (!created) return;
+    // Keep modal in sync with backend-created item (real id)
+
+    setLocalSource((prev) =>
+      isInvestmentSource(prev)
+        ? {
+            ...prev,
+            items: prev.items.some((i) => i.id === created.id)
+              ? prev.items
+              : [...prev.items, created],
+          }
+        : prev,
+    );
+  };
   const handlePaymentAdded = (created: FinancePayment) => {
     setLocalSource((prev) =>
       isFinanceSource(prev)
@@ -65,19 +93,32 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
     setLocalSource((prev) => ({ ...prev, [field]: value }) as any);
   };
   const handleItemInput = async (itemId: string, field: string, value: any) => {
-    if (!isFinanceSource(localSource)) return;
-
-    // 1) optimistic local update
-    setLocalSource((prev) =>
-      isFinanceSource(prev)
-        ? {
-            ...prev,
-            finance_payments: prev.finance_payments.map((itm) =>
-              itm.id === itemId ? { ...itm, [field]: value } : itm,
-            ),
-          }
-        : prev,
-    );
+    if (isFinanceSource(localSource)) {
+      setLocalSource((prev) =>
+        isFinanceSource(prev)
+          ? {
+              ...prev,
+              finance_payments: prev.finance_payments.map((itm) =>
+                itm.id === itemId ? { ...itm, [field]: value } : itm,
+              ),
+            }
+          : prev,
+      );
+      return;
+    }
+    if (isInvestmentSource(localSource)) {
+      setLocalSource((prev) =>
+        isInvestmentSource(prev)
+          ? {
+              ...prev,
+              items: prev.items.map((itm) =>
+                itm.id === itemId ? { ...itm, [field]: value } : itm,
+              ),
+            }
+          : prev,
+      );
+      await updateItem(localSource.id, itemId, { [field]: value });
+    }
   };
 
   function validate() {
@@ -192,6 +233,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
                 fieldConfig={ITEM_FIELDS}
                 itemTypeKey="item"
                 isOpen={!!openItemAccordions[item.id]}
+                onDelete={() => removeItem(source.id, item.id)}
                 toggleOpen={() =>
                   setOpenItemAccordions((prev) => ({
                     ...prev,
@@ -233,10 +275,27 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
             <AddInvestmentItemModal
               open={showAddInvestmentItemModal}
               onClose={() => setShowAddInvestmentItemModal(false)}
-              onSubmit={(newItem) => {
+              onSubmit={async (newItem) => {
+                if (!isInvestmentSource(localSource)) return;
+                const created = await addItem(localSource.id, {
+                  assetName: newItem.assetName,
+                  term: newItem.term,
+                  investedAmount: Number(newItem.investedAmount),
+                  entryDate: newItem.entryDate,
+                  exitDate: newItem.exitDate || null,
+                  result: newItem.result,
+                  resultAmount: newItem.resultAmount,
+                  status: newItem.status,
+                });
+                if (!created) return;
                 setLocalSource((prev) =>
                   isInvestmentSource(prev)
-                    ? { ...prev, items: [...(prev.items ?? []), newItem] }
+                    ? {
+                        ...prev,
+                        items: prev.items.some((i) => i.id === created.id)
+                          ? prev.items
+                          : [...prev.items, created],
+                      }
                     : prev,
                 );
               }}
