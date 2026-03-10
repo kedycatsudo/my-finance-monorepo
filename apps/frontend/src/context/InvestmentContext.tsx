@@ -288,14 +288,11 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${getApiBase()}/api/investment/${getAutheader()}/${sourceId}/items/${itemId}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', ...getAutheader() },
-          body: JSON.stringify(toUpdateItemBody(item)),
-        },
-      );
+      const res = await fetch(`${getApiBase()}/api/investment/${sourceId}/items/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAutheader() },
+        body: JSON.stringify(toUpdateItemBody(item)),
+      });
 
       if (!res.ok) throw new Error('Failed to update investement item');
       const updated = toInvestmentItem(await res.json());

@@ -15,7 +15,13 @@ type SourceContainerProps = {
   onEdit: () => void;
   onDelete: () => void;
 };
+const toAmount = (value: unknown) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
 
+const formatUsd = (value: unknown) =>
+  `${toAmount(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}$`;
 // Type guards for discriminated union
 function isFinanceSource(a: FinanceSource | InvestmentSource): a is FinanceSource {
   return 'finance_payments' in a;
@@ -40,36 +46,34 @@ export default function SourceContainer({
   if (isFinanceSource(item)) {
     // For incomes/outcomes
     title = item.name;
+    const financePayments: FinancePayment[] = Array.isArray(item?.finance_payments)
+      ? item.finance_payments
+      : [];
+    dataPayments = financePayments;
+    const recurringTotal = financePayments
+      .filter((p) => p.loop)
+      .reduce((sum, p) => sum + toAmount(p.amount), 0);
+    const currentMonthTotal = financePayments.reduce((sum, p) => sum + toAmount(p.amount), 0);
+    const avgMonthlyTotal = currentMonthTotal / (financePayments.length || 1);
+
     datasInfo = [
       { id: 1, infoPair: 'Description', data: item.description ?? '' },
       {
         id: 2,
         infoPair: 'Monthly Recurring Amount',
-        data: (Array.isArray(item?.finance_payments) ? item.finance_payments : [])
-          .filter((p) => p.loop)
-          .reduce((sum, p) => sum + p.amount, 0),
+        data: formatUsd(recurringTotal),
       },
       {
         id: 3,
         infoPair: 'Current amount for this month',
-        data:
-          (Array.isArray(item?.finance_payments) ? item.finance_payments : [])
-            .reduce((sum, p) => sum + p.amount, 0)
-            .toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
+        data: formatUsd(currentMonthTotal),
       },
       {
         id: 4,
         infoPair: 'Avg monthly total payment',
-        data:
-          (
-            (Array.isArray(item?.finance_payments) ? item.finance_payments : []).reduce(
-              (sum, p) => sum + p.amount,
-              0,
-            ) / ((Array.isArray(item?.finance_payments) ? item.finance_payments : []).length || 1)
-          ).toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
+        data: formatUsd(avgMonthlyTotal),
       },
     ];
-    dataPayments = item.finance_payments;
   } else if (isInvestmentSource(item)) {
     // For investments
     title = item.name ?? '';
@@ -78,10 +82,7 @@ export default function SourceContainer({
       {
         id: 2,
         infoPair: 'Total Invested',
-        data:
-          item.items
-            .reduce((sum, i) => sum + Number(i.investedAmount ?? 0), 0)
-            .toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
+        data: formatUsd(item.items.reduce((sum, i) => sum + toAmount(i.investedAmount), 0)),
       },
       {
         id: 3,
@@ -101,21 +102,20 @@ export default function SourceContainer({
       {
         id: 6,
         infoPair: 'Realized P&L',
-        data:
+        data: formatUsd(
           item.items
             .filter((i) => i.status === 'closed')
-            .reduce((sum, i) => sum + Number(i.resultAmount ?? 0), 0)
-            .toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
+            .reduce((sum, i) => sum + toAmount(i.resultAmount), 0),
+        ),
       },
       {
         id: 7,
         infoPair: 'Avg Invested per Asset',
-        data:
-          (item.items.length > 0
-            ? item.items.reduce((sum, i) => sum + Number(i.investedAmount ?? 0), 0) /
-              item.items.length
-            : 0
-          ).toLocaleString(undefined, { minimumFractionDigits: 2 }) + '$',
+        data: formatUsd(
+          item.items.length > 0
+            ? item.items.reduce((sum, i) => sum + toAmount(i.investedAmount), 0) / item.items.length
+            : 0,
+        ),
       },
     ];
     dataPayments = item.items;

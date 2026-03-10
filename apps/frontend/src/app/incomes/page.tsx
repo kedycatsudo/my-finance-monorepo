@@ -45,6 +45,10 @@ export default function Incomes() {
     updatePayment,
     removeSource,
   } = useIncomesContext();
+  const toAmount = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSourceId, setEditSourceId] = useState<string | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
@@ -55,7 +59,7 @@ export default function Incomes() {
 
   const totalIncomes = (incomes ?? []).reduce((acc, src) => {
     const payments = Array.isArray(src?.finance_payments) ? src.finance_payments : [];
-    const sourceTotal = payments.reduce((sum, p) => sum + (p?.amount || 0), 0);
+    const sourceTotal = payments.reduce((sum, p) => sum + toAmount(p?.amount || 0), 0);
     return acc + sourceTotal;
   }, 0);
   const paidIncomePayments =
@@ -64,13 +68,14 @@ export default function Incomes() {
       const paidPayments = payments.filter((p) => p.status === 'paid');
       return paidPayments;
     }) ?? [];
-  const totalIncomesPaidAmount = TotalIncomesPaidAmount({ data: incomes });
+  const totalIncomesPaidAmount = toAmount(TotalIncomesPaidAmount({ data: incomes }));
   const recentEarned = RecentEarned({ data: incomes });
   const incomesUpcoming = IncomesUpcoming({ data: incomes });
   const upcomingPaymentsCount = Array.isArray(incomesUpcoming) ? incomesUpcoming.length : 0;
-  const upcomingIncomeAmount = UpcomingIncomeAmount({ data: incomes });
+  const upcomingIncomeAmount = toAmount(UpcomingIncomeAmount({ data: incomes }));
   const upcomingEarning = UpcomingEarning({ data: incomes });
   const incomesSourceList = IncomeSourceList({ data: incomes });
+
   const catchUptheMonth = [
     { name: 'Total Income', data: totalIncomes ?? 0, unit: '$' },
     { name: 'Payments Received', data: paidIncomePayments.length ?? 0 },
@@ -84,7 +89,7 @@ export default function Incomes() {
     incomes.map((src) => ({
       name: src.name,
       amount: (Array.isArray(src?.finance_payments) ? src.finance_payments : []).reduce(
-        (sum, p) => sum + (p?.amount || 0),
+        (sum, p) => sum + toAmount(p?.amount || 0),
         0,
       ),
       description: src.description,

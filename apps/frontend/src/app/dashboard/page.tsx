@@ -14,9 +14,14 @@ import { useInvestmentsContext } from '@/context/InvestmentContext';
 import { flattenInvestments, flattenPayments } from '@/utils/functions/flattenData';
 import { InvestmentItem, InvestmentSource } from '@/types/investments';
 import { FinanceSource, FinancePayment } from '@/types/finance';
+import { TotalIncomes } from '@/utils/functions/dataCalculations/incomesDataCalculations';
+import Incomes from '../incomes/page';
 export default function Dashboard() {
   const pathName = usePathname() ?? '';
-
+  const toAmount = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
   // Get live data from generic contexts
   const { data: incomes } = useIncomesContext();
   const incomesArray = incomes as FinanceSource[];
@@ -45,9 +50,9 @@ export default function Dashboard() {
   const pieDataRaw = [
     {
       name: 'Outcomes',
-      amount: totalOutcomes,
+      amount: toAmount(totalOutcomes),
     },
-    { name: 'Incomes', amount: totalIncomes },
+    { name: 'Incomes', amount: toAmount(totalIncomes) },
     { name: 'Investments', amount: totalInvested },
   ];
   const pieDataWithColors = pieDataRaw.map((item, idx) => ({
@@ -67,7 +72,7 @@ export default function Dashboard() {
   const currentOutcomes = [
     {
       name: 'Total Outcomes',
-      data: totalOutcomes,
+      data: toAmount(totalOutcomes),
       unit: '$',
     },
     {
@@ -78,7 +83,7 @@ export default function Dashboard() {
   const currentIncomes = [
     {
       name: 'Total Incomes',
-      data: totalIncomes,
+      data: toAmount(totalIncomes),
       unit: '$',
     },
     {
@@ -88,20 +93,23 @@ export default function Dashboard() {
   ];
 
   // Recent lists for snapshots
-  const recentOutcomes = allOutcomePayments.slice(0, 5).map((p) => ({
-    name: p.name,
-    data: p.amount,
-    unit: '$',
-    date: p.date,
-  }));
+  const recentOutcomes = allOutcomePayments.slice(0, 5).map((p) =>
+    toAmount({
+      name: p.name,
+      data: p.amount,
+      unit: '$',
+      date: p.date,
+    }),
+  );
 
-  const recentIncomes = allIncomePayments.slice(0, 5).map((p) => ({
-    name: p.name,
-    data: p.amount,
-    unit: '$',
-    date: p.date,
-  }));
-
+  const recentIncomes = allIncomePayments.slice(0, 5).map((p) =>
+    toAmount({
+      name: p.name,
+      data: p.amount,
+      unit: '$',
+      date: p.date,
+    }),
+  );
   const recentInvestments = allInvestmentPositions
     .filter((item) => item.status === 'closed')
     .slice(0, 5)

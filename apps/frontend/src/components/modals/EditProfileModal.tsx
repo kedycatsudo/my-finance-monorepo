@@ -41,10 +41,15 @@ export default function EditProfileModal({
 
   function validate(): boolean {
     const errors: typeof formErrors = {};
-    if (!profile.username) errors.username = 'Username is required';
-    if (!profile.email) errors.email = 'Email is required';
+    if (!profile.username?.trim()) errors.username = 'Username is required';
+    if (!profile.email?.trim()) errors.email = 'Email is required';
     if (!profile.monthlyCircleDate) errors.monthlyCircleDate = 'Date is required';
-    if (!profile.password) errors.password = 'Password is required';
+
+    // Optional: validate only if user entered a new password
+    if (profile.password && profile.password.length > 0 && profile.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   }

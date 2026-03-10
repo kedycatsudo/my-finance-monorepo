@@ -16,6 +16,10 @@ type InOutSnapshotProps = {
 };
 
 export default function PieChartData({ header, items, className }: InOutSnapshotProps) {
+  const toAmount = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
   const total = items.reduce((sum, item) => sum + item.amount, 0);
 
   return (
@@ -57,7 +61,7 @@ export default function PieChartData({ header, items, className }: InOutSnapshot
         ))}
       </div>
       <div className="w-full h-1 my-2 bg-[#29388A] rounded" />
-      <TotalRow total={total} />
+      <TotalRow total={toAmount(total)} />
     </div>
   );
 }

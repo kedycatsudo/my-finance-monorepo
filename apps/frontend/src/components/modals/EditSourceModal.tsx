@@ -117,7 +117,6 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
             }
           : prev,
       );
-      await updateItem(localSource.id, itemId, { [field]: value });
     }
   };
 
@@ -142,12 +141,29 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
 
     return Object.keys(err).length === 0;
   }
-  const handleSubmit = () => {
-    if (validate()) {
-      onSubmit?.(localSource);
-      onClose();
-      setShowAppModal(true);
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    // For investment source: persist all item edits now (single submit flow)
+    if (isInvestmentSource(localSource)) {
+      for (const item of localSource.items ?? []) {
+        await updateItem(localSource.id, item.id, {
+          assetName: item.assetName,
+          term: item.term,
+          investedAmount: item.investedAmount,
+          entryDate: item.entryDate,
+          exitDate: item.exitDate,
+          result: item.result,
+          resultAmount: item.resultAmount,
+          status: item.status,
+        });
+      }
     }
+
+    // Keep your existing source-level submit behavior
+    await onSubmit?.(localSource);
+    onClose();
+    setShowAppModal(true);
   };
   const sourceFields = [
     {
@@ -233,7 +249,16 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
                 fieldConfig={ITEM_FIELDS}
                 itemTypeKey="item"
                 isOpen={!!openItemAccordions[item.id]}
-                onDelete={() => removeItem(source.id, item.id)}
+                onDelete={async () => {
+                  const ok = await removeItem(source.id, item.id);
+                  if (ok) {
+                    setLocalSource((prev) =>
+                      isInvestmentSource(prev)
+                        ? { ...prev, items: prev.items.filter((i) => i.id !== item.id) }
+                        : prev,
+                    );
+                  }
+                }}
                 toggleOpen={() =>
                   setOpenItemAccordions((prev) => ({
                     ...prev,
@@ -275,19 +300,8 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
             <AddInvestmentItemModal
               open={showAddInvestmentItemModal}
               onClose={() => setShowAddInvestmentItemModal(false)}
-              onSubmit={async (newItem) => {
-                if (!isInvestmentSource(localSource)) return;
-                const created = await addItem(localSource.id, {
-                  assetName: newItem.assetName,
-                  term: newItem.term,
-                  investedAmount: Number(newItem.investedAmount),
-                  entryDate: newItem.entryDate,
-                  exitDate: newItem.exitDate || null,
-                  result: newItem.result,
-                  resultAmount: newItem.resultAmount,
-                  status: newItem.status,
-                });
-                if (!created) return;
+              sourceId={localSource.id}
+              onItemAdded={(created) => {
                 setLocalSource((prev) =>
                   isInvestmentSource(prev)
                     ? {

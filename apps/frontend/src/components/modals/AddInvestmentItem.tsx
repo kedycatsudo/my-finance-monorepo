@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react';
 import { InvestmentItem } from '@/types/investments';
 import { ITEM_FIELDS } from '@/constants/fieldConfig';
 import FieldInput from '../forms/FieldInput';
+import { useInvestmentsContext } from '@/context/InvestmentContext';
+import { useModal } from '@/context/ModalContext';
 
 type AddInvestmentItemModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (item: Omit<InvestmentItem, 'id'>) => void;
+  sourceId: string;
+  onItemAdded?: (item: InvestmentItem) => void;
 };
 
 function makeBlankInvestmentItem(): Omit<InvestmentItem, 'id'> {
@@ -27,38 +30,64 @@ function makeBlankInvestmentItem(): Omit<InvestmentItem, 'id'> {
 export default function AddInvestmentItemModal({
   open,
   onClose,
-  onSubmit,
+  sourceId,
+  onItemAdded,
 }: AddInvestmentItemModalProps) {
   const [form, setForm] = useState<Omit<InvestmentItem, 'id'>>(makeBlankInvestmentItem());
-  const [errors, setErrors] = useState<{ [k: string]: string }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { addItem, loading, error } = useInvestmentsContext();
+  const { showModal } = useModal();
 
   useEffect(() => {
-    if (open) {
-      setForm(makeBlankInvestmentItem());
-      setErrors({});
-    }
+    if (!open) return;
+    setForm(makeBlankInvestmentItem());
+    setErrors({});
   }, [open]);
 
-  function handleInput(field: keyof InvestmentItem, value: any) {
+  function handleInput(field: keyof Omit<InvestmentItem, 'id'>, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
   function validate() {
-    const err: typeof errors = {};
-    if (!form.assetName) err.assetName = 'Asset name required';
+    const err: Record<string, string> = {};
+
+    if (!form.assetName?.trim()) err.assetName = 'Asset name required';
     if (!form.term) err.term = 'Term required';
-    if (form.investedAmount === null) err.investedAmount = 'Amount required';
+    if (!Number.isFinite(form.investedAmount)) err.investedAmount = 'Valid amount required';
     if (!form.entryDate) err.entryDate = 'Entry date required';
+    if (form.status === 'closed' && !form.exitDate) err.exitDate = 'Exit date required';
+    if (form.status === 'closed' && form.result === 'none') {
+      err.result = 'Closed item should be profit or loss';
+    }
+
     setErrors(err);
     return Object.keys(err).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (validate()) {
-      onSubmit(form);
-      onClose();
+    if (!validate()) return;
+
+    const payload: Omit<InvestmentItem, 'id'> = {
+      ...form,
+      investedAmount: Number(form.investedAmount),
+      exitDate: form.exitDate || null,
+      resultAmount:
+        form.resultAmount === null || form.resultAmount === undefined
+          ? null
+          : Number(form.resultAmount),
+    };
+
+    const created = await addItem(sourceId, payload);
+
+    if (!created) {
+      showModal('Failed to add investment item.');
+      return;
     }
+
+    onItemAdded?.(created);
+    showModal('Investment item added successfully.');
+    onClose();
   }
 
   if (!open) return null;
@@ -70,6 +99,7 @@ export default function AddInvestmentItemModal({
           <h2 className="text-2xl font-bold mb-2 text-[#29388A] text-center">
             Add Investment Item
           </h2>
+
           {ITEM_FIELDS.map((f) => (
             <FieldInput
               key={f.field}
@@ -81,19 +111,24 @@ export default function AddInvestmentItemModal({
               err={errors[f.field]}
             />
           ))}
+
+          {error && <div className="text-red-600 text-center">{error}</div>}
+
           <div className="flex justify-center gap-2 mt-4">
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
+              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="px-4 py-2 rounded bg-[#29388A] text-white hover:bg-blue-800 font-semibold"
+              disabled={loading}
             >
-              Submit
+              {loading ? 'Adding...' : 'Submit'}
             </button>
           </div>
         </form>

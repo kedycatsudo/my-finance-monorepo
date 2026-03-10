@@ -31,10 +31,6 @@ import { useModal } from '@/context/ModalContext';
 
 export default function Investments() {
   const pathName = usePathname();
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editSource, setEditSource] = useState<InvestmentSource | null>(null);
-  const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
-  const { showModal, showConfirmModal, closeModal } = useModal();
   const {
     data: investments,
     updateSource,
@@ -43,6 +39,15 @@ export default function Investments() {
     error,
     removeSource,
   } = useInvestmentsContext();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editSourceId, setEditSourceId] = useState<string | null>(null);
+  const [editSource, setEditSource] = useState<InvestmentSource | null>(null);
+  const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
+  const { showModal, showConfirmModal, closeModal } = useModal();
+  const liveEditSource = editSourceId
+    ? (investments.find((src) => src.id === editSourceId) ?? null)
+    : null;
+
   const catchUpTheMonth = [
     {
       name: 'Profits this month',
@@ -191,17 +196,17 @@ export default function Investments() {
                   );
                 }}
                 onEdit={() => {
-                  setEditSource(item);
+                  setEditSourceId(item.id);
                   setEditModalOpen(true);
                 }}
               />
             )}
             onAddSource={() => setAddSourceModalOpen(true)}
           />
-          {editSource && (
+          {liveEditSource && (
             <EditSourceModal
               open={editModalOpen}
-              source={editSource}
+              source={liveEditSource}
               onClose={() => setEditModalOpen(false)}
               onSubmit={async (updatedSource) => {
                 if ('items' in updatedSource) {
@@ -210,6 +215,7 @@ export default function Investments() {
                 }
 
                 setEditModalOpen(false);
+                setEditSourceId(null);
               }}
             />
           )}
