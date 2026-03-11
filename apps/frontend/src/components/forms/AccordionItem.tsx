@@ -62,7 +62,7 @@ export default function AccordionItem({
           <Image
             onClick={(e) => {
               e.stopPropagation(); // Prevent accidental open/close on edit
-              onDelete();
+              onDelete?.();
             }}
             src={`${assetPrefix}delete.svg`}
             alt="Delete payment button"

@@ -8,7 +8,13 @@ function toSortTime(value: string): number {
 }
 
 export function flattenPayments<
-  S extends { name?: string; sourceName?: string; finance_paymens?: P[]; payments?: P[] },
+  S extends {
+    name?: string;
+    sourceName?: string;
+    finance_payments?: P[];
+    finance_paymens?: P[];
+    payments?: P[];
+  },
   P extends {
     date: string;
     amount: number;
@@ -22,11 +28,13 @@ export function flattenPayments<
   return (Array.isArray(sources) ? sources : [])
     .flatMap((src) => {
       const source = src.name ?? src.sourceName ?? '';
-      const payments = Array.isArray(src.finance_paymens)
-        ? src.finance_paymens
-        : Array.isArray(src.payments)
-          ? src.payments
-          : [];
+      const payments = Array.isArray(src.finance_payments)
+        ? src.finance_payments
+        : Array.isArray(src.finance_paymens)
+          ? src.finance_paymens
+          : Array.isArray(src.payments)
+            ? src.payments
+            : [];
       return payments.map((p) => ({
         ...p,
         source,

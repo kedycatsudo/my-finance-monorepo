@@ -93,23 +93,19 @@ export default function Dashboard() {
   ];
 
   // Recent lists for snapshots
-  const recentOutcomes = allOutcomePayments.slice(0, 5).map((p) =>
-    toAmount({
-      name: p.name,
-      data: p.amount,
-      unit: '$',
-      date: p.date,
-    }),
-  );
-
-  const recentIncomes = allIncomePayments.slice(0, 5).map((p) =>
-    toAmount({
-      name: p.name,
-      data: p.amount,
-      unit: '$',
-      date: p.date,
-    }),
-  );
+  const recentOutcomes = allOutcomePayments.slice(0, 5).map((p) => ({
+    name: p.name,
+    data: toAmount(p.amount),
+    unit: '$',
+    date: p.date,
+  }));
+  console.log(allOutcomePayments);
+  const recentIncomes = allIncomePayments.slice(0, 5).map((p) => ({
+    name: p.name,
+    data: toAmount(p.amount),
+    unit: '$',
+    date: p.date,
+  }));
   const recentInvestments = allInvestmentPositions
     .filter((item) => item.status === 'closed')
     .slice(0, 5)

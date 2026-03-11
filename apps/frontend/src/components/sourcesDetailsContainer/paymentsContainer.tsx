@@ -102,7 +102,7 @@ export default function PaymentsContainer({ payment, open, onClick }: PaymentsCo
             const value = payment[field];
             const isLoopedFinanceDate =
               field === 'date' && isFinancePayment(payment) && Boolean(payment.loop);
-            let displayValue =
+            const displayValue =
               typeof value === 'boolean'
                 ? value
                   ? 'Yes'
