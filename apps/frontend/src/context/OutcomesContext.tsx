@@ -157,7 +157,6 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         },
       );
       if (!res.ok) {
-        console.log(res);
         throw new Error('Failed to add payment');
       }
       const payload = await res.json();
@@ -251,7 +250,6 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...getAuthHeader() } },
       );
       if (!res.ok) {
-        console.log(res.body);
         throw new Error('Failed to remove outcome payment');
       }
       setData((prev) =>
@@ -267,7 +265,6 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       return true;
     } catch (error: any) {
       setError(error.message || 'Failed to remove outcome payment');
-      console.log(error);
       return false;
     } finally {
       setLoading(false);

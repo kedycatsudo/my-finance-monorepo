@@ -23,7 +23,7 @@ export default function AppModal() {
               Cancel
             </button>
             <button
-              className="bg-[#29388A]-600 text-white p-2 rounded hover "
+              className="bg-[#29388A] text-white p-2 rounded hover:bg-[#3A4483]"
               onClick={() => {
                 modal.onConfirm?.();
                 closeModal();

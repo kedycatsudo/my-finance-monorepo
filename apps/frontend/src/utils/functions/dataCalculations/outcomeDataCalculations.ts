@@ -37,7 +37,7 @@ export function TotalOutcomes({ data }: DataCalculationProps): number {
     (sum, src) =>
       sum +
       (Array.isArray(src?.finance_payments) ? src.finance_payments : []).reduce(
-        (s, p) => s + (p?.amount || 0),
+        (s, p) => s + Number(p?.amount || 0),
         0,
       ),
     0,
@@ -74,7 +74,7 @@ export function UpcomingOutcomeAmount({ data }: DataCalculationProps): number {
     )
     .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'coming')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .reduce((sum, payment) => sum + Number(payment.amount), 0);
 }
 export function UpcomingAmount({ data }: DataCalculationProps): number {
   return data
@@ -86,7 +86,7 @@ export function OutcomeSourcesList({ data }: DataCalculationProps): SourceListIt
   return data.map((d) => ({
     name: d.name,
     amount: (Array.isArray(d?.finance_payments) ? d.finance_payments : []).reduce(
-      (sum, p) => sum + (p?.amount || 0),
+      (sum, p) => sum + Number(p?.amount || 0),
       0,
     ),
     unit: '$',

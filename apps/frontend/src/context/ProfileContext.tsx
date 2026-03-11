@@ -126,7 +126,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setSaving(false);
     }
   }
-
   const value = useMemo(
     () => ({ profile, loading, saving, error, setProfile, updateProfile }),
     [profile, loading, saving, error],

@@ -75,7 +75,6 @@ export default function Incomes() {
   const upcomingIncomeAmount = toAmount(UpcomingIncomeAmount({ data: incomes }));
   const upcomingEarning = UpcomingEarning({ data: incomes });
   const incomesSourceList = IncomeSourceList({ data: incomes });
-
   const catchUptheMonth = [
     { name: 'Total Income', data: totalIncomes ?? 0, unit: '$' },
     { name: 'Payments Received', data: paidIncomePayments.length ?? 0 },
@@ -117,7 +116,7 @@ export default function Incomes() {
           activePath={pathName ?? undefined}
           className="hidden [@media(min-width:450px)]:flex rounded-lg ..."
         />
-        <div className="flex flex-row xs:flex-col relative gap-2 items-center">
+        <div className="w-full flex flex-row xs:flex-col relative gap-2 items-center">
           <RecentSideInfo header="Recent Received" items={recentEarned} />
           <RecentSideInfo header="Upcoming Payment" items={upcomingEarning} />
         </div>
@@ -203,8 +202,11 @@ export default function Incomes() {
             <CreateSourceModal
               open={addSourceModalOpen}
               onClose={() => setAddSourceModalOpen(false)}
-              onSubmit={(fields) => {
-                addSource(fromSourceBaseToFinanceSource({ ...fields, sourceType: 'finance' }));
+              onSubmit={async (fields) => {
+                await addSource(
+                  fromSourceBaseToFinanceSource({ ...fields, sourceType: 'finance' }),
+                );
+                showModal('Source added successfully.');
                 setAddSourceModalOpen(false);
               }}
             />

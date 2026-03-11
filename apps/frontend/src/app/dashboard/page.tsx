@@ -33,12 +33,12 @@ export default function Dashboard() {
   // For pie chart & summary
   const totalIncomes = incomesArray.reduce(
     (sum: number, src: FinanceSource) =>
-      sum + src.finance_payments.reduce((s: number, p: FinancePayment) => s + p.amount, 0),
+      sum + src.finance_payments.reduce((s: number, p: FinancePayment) => s + Number(p.amount), 0),
     0,
   );
   const totalOutcomes = outcomes.reduce(
     (sum: number, src: FinanceSource) =>
-      sum + src.finance_payments.reduce((s: number, p) => s + p.amount, 0),
+      sum + src.finance_payments.reduce((s: number, p) => s + Number(p.amount), 0),
     0,
   );
   const totalInvested = investments.reduce(
@@ -119,7 +119,7 @@ export default function Dashboard() {
       date: item.entryDate || '',
       unit: '$',
     }));
-  const recentMisc = allInvestmentPositions
+  const openPositions = allInvestmentPositions
     .filter((item) => item.status === 'open')
     .slice(0, 5)
     .map((item) => ({
@@ -138,8 +138,8 @@ export default function Dashboard() {
         />
         {/*recently investment and miscs */}
         <div className=" w-full flex flex-col relative gap-2 items-center">
-          <RecentSideInfo header="Recent invested" items={recentInvestments} />
-          <RecentSideInfo header="Recent Miscellaneous" items={recentMisc} />
+          <RecentSideInfo header="Recent Closed Positions" items={recentInvestments} />
+          <RecentSideInfo header="Open Positions" items={openPositions} />
         </div>
       </div>
       {/* Main Content */}
@@ -149,11 +149,6 @@ export default function Dashboard() {
           <h1 className="text-3xl xs:text-6xl font-bold text-[#1E1552] text-center z-10">
             DASHBOARD
           </h1>
-          <p className="text-x xs:text-xl font-bold text-[#1E1552] max-w-[750px] text-center z-10">
-            Welcome to MyFinance Dashboard. Congratulations, your colour is
-            <span className="text-green-700"> green </span>
-            so far this month.
-          </p>
         </div>
         <div className="w-full flex xs:hidden flex-col items-center gap-5">
           <SideBar
@@ -162,7 +157,7 @@ export default function Dashboard() {
           />
           <div className="w-full flex flex-col relative gap-1 items-center">
             <RecentSideInfo header="Recently Invested" items={recentInvestments} />
-            <RecentSideInfo header="Recent Miscellaneous" items={recentMisc} />
+            <RecentSideInfo header="Recent Miscellaneous" items={openPositions} />
           </div>
         </div>
         <div className="flex flex-col  justify-center items-center gap-1 w-full">

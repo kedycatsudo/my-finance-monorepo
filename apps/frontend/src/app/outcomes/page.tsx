@@ -55,7 +55,10 @@ export default function Outcomes() {
   const liveEditSource = editSourceId
     ? (outcomes.find((src) => src.id === editSourceId) ?? null)
     : null;
-
+  const toAmount = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  };
   //Quick reachs
   const outcomesUpcoming = outcomeUpcoming({ data: outcomes });
   const upcomingPaymentsCount = Array.isArray(outcomesUpcoming) ? outcomeUpcoming.length : 0;
@@ -64,14 +67,18 @@ export default function Outcomes() {
   const upcomingPayment = UpcomingPayment({ data: outcomes });
   const outcomesSourceList = OutcomeSourcesList({ data: outcomes });
   const catchUptheMonth = [
-    { name: 'Total Outcomes', data: TotalOutcomes({ data: outcomes }), unit: '$' },
+    { name: 'Total Outcomes', data: toAmount(TotalOutcomes({ data: outcomes })), unit: '$' },
     {
       name: 'Got Paid Payments',
       data: Object.keys(PaidOutcomePayments({ data: outcomes })).length,
     },
-    { name: 'Got Paid Amount', data: TotalIncomesPaidAmount({ data: outcomes }), unit: '$' },
+    {
+      name: 'Got Paid Amount',
+      data: toAmount(TotalIncomesPaidAmount({ data: outcomes })),
+      unit: '$',
+    },
     { name: 'UpComing Payments', data: upcomingPaymentsCount },
-    { name: 'Upcoming Amount', data: upcomingOutcomeAmount ?? 0, unit: '$' },
+    { name: 'Upcoming Amount', data: toAmount(upcomingOutcomeAmount) ?? 0, unit: '$' },
     { name: 'Reset Date', data: '-/01-' },
   ];
   // ... prepare your summary data as usual...
@@ -80,7 +87,7 @@ export default function Outcomes() {
     outcomes.map((src) => ({
       name: src.name,
       amount: (Array.isArray(src?.finance_payments) ? src.finance_payments : []).reduce(
-        (sum, p) => sum + (p?.amount || 0),
+        (sum, p) => sum + Number(p?.amount || 0),
         0,
       ),
       description: src.description,
@@ -186,8 +193,11 @@ export default function Outcomes() {
             <CreateSourceModal
               open={addSourceModalOpen}
               onClose={() => setAddSourceModalOpen(false)}
-              onSubmit={(fields) => {
-                addSource(fromSourceBaseToFinanceSource({ ...fields, sourceType: 'finance' }));
+              onSubmit={async (fields) => {
+                await addSource(
+                  fromSourceBaseToFinanceSource({ ...fields, sourceType: 'finance' }),
+                );
+                showModal('Source added successfully.');
                 setAddSourceModalOpen(false);
               }}
             />

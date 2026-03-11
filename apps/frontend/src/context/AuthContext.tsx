@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }) {
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, monthlyCircleDate }),
@@ -94,6 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     setJwt(null);
     setCurrentUser(null);
+    localStorage.removeItem('profile');
+    setProfile(null);
     setError(null);
     localStorage.removeItem('token');
   }

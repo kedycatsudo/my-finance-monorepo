@@ -13,7 +13,7 @@ const toAmount = (value: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 export default function SourcesList({ header, items, className = '' }: SourcesListProps) {
-  const total = items.reduce((sum, item) => sum + item.amount, 0);
+  const total = items.reduce((sum, item) => sum + Number(item.amount), 0);
   return (
     <div
       className={`w-full bg-[#3A4483]/75 rounded-[16px] p-1 flex flex-col items-center shadow-lg ${className}`}

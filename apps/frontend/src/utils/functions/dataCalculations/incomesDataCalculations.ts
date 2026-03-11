@@ -24,7 +24,7 @@ export function TotalIncomesPaidAmount({ data }: DataCalculationProps) {
     .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
     .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'paid')
-    .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 }
 export function PaidIncomePayments({ data }: DataCalculationProps): object {
   return data
@@ -72,13 +72,13 @@ export function UpcomingIncomeAmount({ data }: DataCalculationProps): number {
     .flatMap((income) => (Array.isArray(income?.finance_payments) ? income.finance_payments : []))
     .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'coming')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+    .reduce((sum, payment) => sum + Number(payment.amount), 0);
 }
 export function IncomeSourceList({ data }: DataCalculationProps): SourceListItem[] {
   return data.map((d) => ({
     name: d.name,
     amount: (Array.isArray(d?.finance_payments) ? d.finance_payments : []).reduce(
-      (sum, p) => sum + (p?.amount || 0),
+      (sum, p) => sum + Number(p?.amount || 0),
       0,
     ),
     unit: '$',

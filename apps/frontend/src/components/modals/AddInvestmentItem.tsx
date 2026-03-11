@@ -55,10 +55,6 @@ export default function AddInvestmentItemModal({
     if (!form.term) err.term = 'Term required';
     if (!Number.isFinite(form.investedAmount)) err.investedAmount = 'Valid amount required';
     if (!form.entryDate) err.entryDate = 'Entry date required';
-    if (form.status === 'closed' && !form.exitDate) err.exitDate = 'Exit date required';
-    if (form.status === 'closed' && form.result === 'none') {
-      err.result = 'Closed item should be profit or loss';
-    }
 
     setErrors(err);
     return Object.keys(err).length === 0;
