@@ -7,11 +7,13 @@ import CatchUpTheMonth from '@/components/outcomes/catchUpTheMonth';
 import MobileMenuButton from '@/components/MobileBurgerMenu';
 import EditProfileModal from '@/components/modals/EditProfileModal';
 import { useProfile } from '@/context/ProfileContext';
+import { useModal } from '@/context/ModalContext';
 
 export default function ProfilePage() {
   const pathName = usePathname();
   const { profile, updateProfile, loading, saving, error } = useProfile();
   const [editOpen, setEditOpen] = useState(false);
+  const { showConfirmModal, showModal, closeModal } = useModal();
 
   if (loading) {
     return (
@@ -69,6 +71,7 @@ export default function ProfilePage() {
           onClose={() => setEditOpen(false)}
           onSubmit={async (updated) => {
             await updateProfile(updated);
+            showModal('Profile updated succesfully.');
             setEditOpen(false);
           }}
         />
