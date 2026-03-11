@@ -3,6 +3,7 @@ import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { RegisterDto } from './dto/register.dto';
+import { loginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +22,16 @@ export class AuthService {
   }
   async login(user: any) {
     const payload = { username: user.username, sub: user.id };
-    return { access_token: this.jwtService.sign(payload), user };
+
+    const access_token = this.jwtService.sign(payload);
+
+    // run the monthly reset silently - never block login
+    try {
+      await this.usersService.runMonthlyReset(user.id);
+    } catch (e) {
+      console.warn('Monthly reset failed for user', user.id, e);
+    }
+    return { access_token, user: user };
   }
 
   //Register Logic

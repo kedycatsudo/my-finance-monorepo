@@ -44,6 +44,7 @@ export function RecentEarned({ data }: DataCalculationProps): RecentSideInfoItem
       data: p.amount,
       unit: '$',
       date: p.date,
+      loop: p.loop,
     }));
 }
 export function UpcomingEarning({ data }: DataCalculationProps): RecentSideInfoItem[] {
@@ -57,6 +58,7 @@ export function UpcomingEarning({ data }: DataCalculationProps): RecentSideInfoI
       data: p.amount,
       unit: '$',
       date: p.date,
+      loop: p.loop,
     }));
 }
 export function IncomesUpcoming({ data }: DataCalculationProps): object {

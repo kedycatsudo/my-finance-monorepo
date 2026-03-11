@@ -20,6 +20,7 @@ export function RecentPaid({ data }: DataCalculationProps): RecentSideInfoItem[]
       data: p.amount,
       unit: '$',
       date: p.date,
+      loop: p.loop,
     }));
 }
 export function UpcomingPayment({ data }: DataCalculationProps): RecentSideInfoItem[] {
@@ -30,7 +31,7 @@ export function UpcomingPayment({ data }: DataCalculationProps): RecentSideInfoI
     )
     .filter((payment): payment is FinancePayment => Boolean(payment))
     .filter((payment) => payment.status === 'coming')
-    .map((p) => ({ name: p.name, data: p.amount, unit: '$', date: p.date }));
+    .map((p) => ({ name: p.name, data: p.amount, unit: '$', date: p.date, loop: p.loop }));
 }
 export function TotalOutcomes({ data }: DataCalculationProps): number {
   return data.reduce(

@@ -26,6 +26,13 @@ export default function PaymentsContainer({ payment, open, onClick }: PaymentsCo
     return parsed.toISOString().slice(0, 10);
   };
 
+  const formatLoopDay = (value: unknown) => {
+    const fullDate = formatDateDisplay(value);
+    if (fullDate === '--') return fullDate;
+    const day = fullDate.slice(8, 10);
+    return day ? `Every ${Number(day)}` : fullDate;
+  };
+
   // Define field labels for both types
   const financeFieldLabels: { [K in keyof FinancePayment]?: string } = {
     name: 'Name',
@@ -93,13 +100,17 @@ export default function PaymentsContainer({ payment, open, onClick }: PaymentsCo
           {fields.map(([field, label]) => {
             // @ts-ignore: Index dynamic field
             const value = payment[field];
+            const isLoopedFinanceDate =
+              field === 'date' && isFinancePayment(payment) && Boolean(payment.loop);
             let displayValue =
               typeof value === 'boolean'
                 ? value
                   ? 'Yes'
                   : 'No'
                 : field === 'date' || field === 'entryDate' || field === 'exitDate'
-                  ? formatDateDisplay(value)
+                  ? isLoopedFinanceDate
+                    ? formatLoopDay(value)
+                    : formatDateDisplay(value)
                   : field === 'amount' || field === 'investedAmount' || field === 'resultAmount'
                     ? value != null
                       ? `${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })} $`
