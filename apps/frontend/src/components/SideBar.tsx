@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { navItems } from '@/data/navItems';
 import { useRouter } from 'next/navigation'; // <-- UPDATED
 import { useAuth } from '@/context/AuthContext';
-import { assetPrefix, basePath } from '@/constants/config';
+import { assetPrefix } from '@/constants/config';
 type SideBarProps = {
   className?: string;
   activePath?: string;

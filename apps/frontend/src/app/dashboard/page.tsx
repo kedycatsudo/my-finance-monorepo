@@ -14,8 +14,7 @@ import { useInvestmentsContext } from '@/context/InvestmentContext';
 import { flattenInvestments, flattenPayments } from '@/utils/functions/flattenData';
 import { InvestmentItem, InvestmentSource } from '@/types/investments';
 import { FinanceSource, FinancePayment } from '@/types/finance';
-import { TotalIncomes } from '@/utils/functions/dataCalculations/incomesDataCalculations';
-import Incomes from '../incomes/page';
+
 export default function Dashboard() {
   const pathName = usePathname() ?? '';
   const toAmount = (value: unknown) => {
@@ -64,7 +63,6 @@ export default function Dashboard() {
   const pieChartData = pieDataWithColors.map((d) => ({
     name: d.name,
     amount: d.amount,
-    date: Date.now(),
     color: d.color,
   }));
 

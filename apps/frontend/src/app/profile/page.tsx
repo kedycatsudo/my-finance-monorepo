@@ -13,7 +13,7 @@ export default function ProfilePage() {
   const pathName = usePathname();
   const { profile, updateProfile, loading, saving, error } = useProfile();
   const [editOpen, setEditOpen] = useState(false);
-  const { showConfirmModal, showModal, closeModal } = useModal();
+  const { showModal } = useModal();
 
   if (loading) {
     return (

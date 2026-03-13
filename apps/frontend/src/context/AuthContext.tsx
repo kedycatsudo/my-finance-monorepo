@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User } from '@/types/user';
-import { ProfileProvider, useProfile } from './ProfileContext';
+import { useProfile } from './ProfileContext';
 type AuthContextType = {
   currentUser: User | null;
   jwt: string | null;
@@ -20,8 +20,16 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'Internal Error';
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { profile, setProfile, updateProfile } = useProfile();
+  const { setProfile } = useProfile();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [jwt, setJwt] = useState<string | null>(() =>
     typeof window !== 'undefined' ? localStorage.getItem('token') : null,
@@ -51,9 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setError(data.message || 'Login failed');
       return { success: false, message: data.message || 'Login failed' };
-    } catch (error: any) {
-      setError(error.message || 'Internal Error');
-      return { success: false, message: error.message || 'Internal Error' };
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      setError(message);
+      return { success: false, message };
     }
   }
 
@@ -86,9 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError(data.message || 'Registration failed');
         return { success: false, message: data.message || 'Registration failed' };
       }
-    } catch (error: any) {
-      setError(error.message || 'Internal error');
-      return { success: false, message: error.message || 'Internal error' };
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      setError(message);
+      return { success: false, message };
     }
   }
   function logout() {

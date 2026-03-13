@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import DateTimeDisplay from '@/components/DateTimeDisplay';
-import { assetPrefix, basePath } from '@/constants/config';
+import { assetPrefix } from '@/constants/config';
 export default function Header() {
   return (
     <header>

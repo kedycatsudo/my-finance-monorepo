@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { InvestmentItem } from '@/types/investments';
 import { ITEM_FIELDS } from '@/constants/fieldConfig';
 import FieldInput from '../forms/FieldInput';
@@ -38,11 +38,15 @@ export default function AddInvestmentItemModal({
   const { addItem, loading, error } = useInvestmentsContext();
   const { showModal } = useModal();
 
-  useEffect(() => {
-    if (!open) return;
+  function resetLocalState() {
     setForm(makeBlankInvestmentItem());
     setErrors({});
-  }, [open]);
+  }
+
+  function handleClose() {
+    resetLocalState();
+    onClose();
+  }
 
   function handleInput(field: keyof Omit<InvestmentItem, 'id'>, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -83,7 +87,7 @@ export default function AddInvestmentItemModal({
 
     onItemAdded?.(created);
     showModal('Investment item added successfully.');
-    onClose();
+    handleClose();
   }
 
   if (!open) return null;
@@ -113,7 +117,7 @@ export default function AddInvestmentItemModal({
           <div className="flex justify-center gap-2 mt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
               disabled={loading}
             >

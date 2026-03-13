@@ -10,10 +10,9 @@ import SourcesDetailsContainer from '@/components/sourcesDetailsContainer/source
 import SourcesList from '@/components/SourcesList';
 import { usePathname } from 'next/navigation';
 import { useInvestmentsContext } from '@/context/InvestmentContext';
-import { InvestmentSource } from '@/types/investments';
 import EditSourceModal from '@/components/modals/EditSourceModal';
 import SourceContainer from '@/components/sourcesDetailsContainer/sourceContainer';
-import CreateSourceModal, { SourceBase } from '@/components/modals/CreateSourceModal';
+import CreateSourceModal from '@/components/modals/CreateSourceModal';
 import {
   RecentProfits,
   RecentLoss,
@@ -41,7 +40,6 @@ export default function Investments() {
   } = useInvestmentsContext();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSourceId, setEditSourceId] = useState<string | null>(null);
-  const [editSource, setEditSource] = useState<InvestmentSource | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
   const { showModal, showConfirmModal, closeModal } = useModal();
   const liveEditSource = editSourceId
@@ -86,7 +84,7 @@ export default function Investments() {
       unit: '$',
     },
   ];
-  const newSourceType: 'investment' = 'investment';
+  const newSourceType = 'investment' as const;
 
   // --- stats, chart, etc. code same as before ---
 
@@ -178,7 +176,7 @@ export default function Investments() {
           <SourcesDetailsContainer
             header="Investment Sources"
             items={investments}
-            renderSource={(item, open, onClick, onEdit) => (
+            renderSource={(item, open, onClick) => (
               <SourceContainer
                 key={item.id}
                 item={item}
@@ -229,6 +227,8 @@ export default function Investments() {
                   description: fields.description,
                   type: newSourceType,
                 });
+                showModal('Source added successfully.');
+
                 setAddSourceModalOpen(false);
               }}
             />

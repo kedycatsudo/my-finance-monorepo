@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import TotalRow from '../TotalRow';
-import { FinancePayment } from '@/types/finance';
 type FinancialSnapshotItem = {
   name: string;
   data: number;
@@ -19,10 +18,6 @@ export default function FinancialSnapShot({
   items,
   className = '',
 }: FinancialSnapShotProps) {
-  const toAmount = (value: unknown) => {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : 0;
-  };
   const total = items.reduce((sum, item) => sum + item.data, 0);
   const toSortTime = (value?: string | number) => {
     if (!value) return 0;

@@ -14,6 +14,7 @@ type AddPaymentModalProps = {
   onClose: () => void;
   onPaymentAdded?: (payment: FinancePayment) => void; // Callback after successful payment add
 };
+
 function makeBlankPayment(): FinancePayment {
   return {
     id: Date.now().toString() + Math.random().toString(36).slice(2),
@@ -38,15 +39,22 @@ export default function AddPaymentModal({
   const { addPaymentToIncomes, loading, error } = useIncomesContext();
   const { addPaymentToOutcomes } = useOutcomesContext();
   const { showModal } = useModal();
-
+  function resetLocalState() {
+    setForm(makeBlankPayment());
+    setErrors({});
+  }
+  function handleClose() {
+    resetLocalState();
+    onClose();
+  }
   useEffect(() => {
-    if (open) {
-      setForm(makeBlankPayment());
-      setErrors({});
-    }
+    if (!open) return;
   }, [open]);
-
-  function handleInput(field: keyof FinancePayment, value: any) {
+  function getFieldValue(field: keyof FinancePayment): string {
+    const v = form[field];
+    return typeof v === 'string' ? v : String(v ?? '');
+  }
+  function handleInput(field: keyof FinancePayment, value: string | number | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -69,16 +77,17 @@ export default function AddPaymentModal({
       if (newPayment) {
         onPaymentAdded?.(newPayment);
         showModal('Payment added successfully.');
-        onClose();
+        handleClose();
       }
       return;
     }
+    if (!open) return null;
     if (sourceType === 'income') {
       const newPayment = await addPaymentToIncomes(sourceId, form);
       if (newPayment) {
         onPaymentAdded?.(newPayment);
         showModal('Paymend added succusfully.');
-        onClose();
+        handleClose();
       }
       return;
     }
@@ -98,7 +107,7 @@ export default function AddPaymentModal({
               label={f.label}
               type={f.type}
               enumOptions={f.enumOptions}
-              value={form[f.field as keyof FinancePayment]}
+              value={getFieldValue(f.field as keyof FinancePayment)}
               onChange={(v) => handleInput(f.field as keyof FinancePayment, v)}
               err={errors[f.field]}
             />
@@ -107,7 +116,7 @@ export default function AddPaymentModal({
           <div className="flex justify-center gap-2 mt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
               disabled={loading}
             >

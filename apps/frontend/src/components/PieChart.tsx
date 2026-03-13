@@ -37,18 +37,19 @@ export default function PieChart({ data, size = 300, className, ringWidth = 100 
   const cy = size / 2;
   const circ = 2 * Math.PI * radius;
   const total = data.reduce((sum, d) => sum + Math.max(0, d.amount), 0) || 1;
-  let prevPercent = 0;
-  const slices = data.map((item, idx) => {
+  const slices = data.reduce<
+    { color: string; dash: number; offset: number; runningPercent: number }[]
+  >((acc, item, idx) => {
+    const prevPercent = acc.length > 0 ? acc[acc.length - 1].runningPercent : 0;
     const percent = Math.max(0, item.amount) / total;
-    const dash = circ * percent;
-    const slice = {
-      color: item.color ?? DEFAULT_CHART_COLORS[idx % DEFAULT_CHART_COLORS.length], // fall back only if missing
-      dash,
+    acc.push({
+      color: item.color ?? DEFAULT_CHART_COLORS[idx % DEFAULT_CHART_COLORS.length],
+      dash: circ * percent,
       offset: -circ * prevPercent,
-    };
-    prevPercent += percent;
-    return slice;
-  });
+      runningPercent: prevPercent + percent,
+    });
+    return acc;
+  }, []);
   return (
     <div className={'flex flex-col items-center' + (className ? ` ${className}` : '')}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block' }}>

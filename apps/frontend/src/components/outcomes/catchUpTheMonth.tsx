@@ -9,7 +9,7 @@ type CatchUpTheMonthItems = {
 
 type CatchUpTheMonthProps = { header: string; items: CatchUpTheMonthItems[]; className?: string };
 
-export default function CatchUpTheMonth({ header, items, className = '' }: CatchUpTheMonthProps) {
+export default function CatchUpTheMonth({ header, items }: CatchUpTheMonthProps) {
   return (
     <div
       className={'w-full bg-[#3A4483]/75 rounded-[16px] p-1 flex flex-col items-center shadow-lg'}

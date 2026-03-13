@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import SideBar from '@/components/SideBar';
 import RecentSideInfo from '@/components/RecentSideInfo';
 import MobileMenuButton from '@/components/MobileBurgerMenu';
@@ -44,14 +44,7 @@ export default function Outcomes() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSourceId, setEditSourceId] = useState<string | null>(null);
   const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
-  const {
-    data: outcomes,
-    removeSource,
-    updateSource,
-    addSource,
-    loading,
-    error,
-  } = useOutcomesContext();
+  const { data: outcomes, removeSource, updateSource, addSource } = useOutcomesContext();
   const liveEditSource = editSourceId
     ? (outcomes.find((src) => src.id === editSourceId) ?? null)
     : null;
@@ -147,7 +140,7 @@ export default function Outcomes() {
           <SourcesDetailsContainer
             header="Outcome Sources"
             items={outcomes}
-            renderSource={(item, open, onClick, onEdit) => (
+            renderSource={(item, open, onClick) => (
               <SourceContainer
                 onDelete={() => {
                   showConfirmModal(

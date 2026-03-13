@@ -19,12 +19,11 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [formErrors, setFormErrors] = useState<{ [key in keyof Profile]?: string }>({});
-
-  useEffect(() => {
+  function profileInitialization() {
     setProfile(initialProfile);
     setFormErrors({});
-  }, [initialProfile, open]);
-
+  }
+  useEffect(() => {}, [initialProfile, open]);
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
@@ -35,7 +34,7 @@ export default function EditProfileModal({
 
   if (!open) return null;
 
-  function handleInput(field: keyof Profile, value: string) {
+  function handleInput(field: keyof Profile, value: string | number | boolean) {
     setProfile((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -57,6 +56,7 @@ export default function EditProfileModal({
   function handleSubmit() {
     if (validate()) {
       onSubmit(profile);
+      profileInitialization();
       onClose();
     }
   }

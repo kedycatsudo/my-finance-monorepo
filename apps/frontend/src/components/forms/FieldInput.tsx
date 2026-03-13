@@ -3,8 +3,8 @@
 type FieldInputProps = {
   label: string;
   type?: string;
-  value: any;
-  onChange: (v: any) => void;
+  value: string | number | null | undefined;
+  onChange: (v: string | number | boolean) => void;
   enumOptions?: string[];
   err?: string;
   onBlur?: () => void;
@@ -19,7 +19,7 @@ export default function FieldInput({
   err,
   onBlur,
 }: FieldInputProps) {
-  const toDateInputValue = (dateValue: any) => {
+  const toDateInputValue = (dateValue: string | Date | null | undefined) => {
     if (!dateValue) return '';
     if (dateValue instanceof Date) return dateValue.toISOString().slice(0, 10);
     const raw = String(dateValue);
@@ -35,7 +35,7 @@ export default function FieldInput({
         {' '}
         <span className="block">{label}</span>
         <select
-          value={value}
+          value={value === null ? undefined : value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           className="rounded border px-2 py-1 mt-1 w-full text-black"
@@ -71,7 +71,9 @@ export default function FieldInput({
       {label}
       <input
         type={type || 'text'}
-        value={type === 'date' ? toDateInputValue(value) : (value ?? '')}
+        value={
+          type === 'date' ? toDateInputValue(value === null ? '' : String(value)) : (value ?? '')
+        }
         onChange={(e) =>
           onChange(
             type === 'number'

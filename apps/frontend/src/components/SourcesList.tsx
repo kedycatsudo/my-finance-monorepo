@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import TotalRow from './TotalRow';
-import { FinancePayment } from '@/types/finance';
 import { SourceListItem } from '@/types/sourceListItem';
 type SourcesListProps = {
   header: string;

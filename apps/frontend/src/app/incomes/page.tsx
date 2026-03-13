@@ -42,7 +42,6 @@ export default function Incomes() {
     addSource,
     loading,
     error,
-    updatePayment,
     removeSource,
   } = useIncomesContext();
   const toAmount = (value: unknown) => {
@@ -150,7 +149,7 @@ export default function Incomes() {
           <SourcesDetailsContainer
             header="Income Sources"
             items={incomes}
-            renderSource={(item, open, onClick, onEdit) => (
+            renderSource={(item, open, onClick) => (
               <SourceContainer
                 key={item.id}
                 item={item}

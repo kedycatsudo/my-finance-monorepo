@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useModal } from '@/context/ModalContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { assetPrefix, basePath } from '@/constants/config';
+import { assetPrefix } from '@/constants/config';
 
 export default function LoginPage() {
   const { login } = useAuth();

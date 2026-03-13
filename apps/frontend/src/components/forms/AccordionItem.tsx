@@ -12,13 +12,13 @@ type ItemFieldConfig = {
   enumOptions?: string[];
 };
 type AccordionItemProps = {
-  item: Record<string, any>;
+  item: Record<string, unknown>;
   fieldConfig: ItemFieldConfig[];
   itemTypeKey: string; //payment | item
   isOpen: boolean;
   toggleOpen: () => void;
-  handleItemInput: (itemId: string, field: string, value: any) => void;
-  errors?: Record<string, any>;
+  handleItemInput: (itemId: string, field: string, value: string | number | boolean) => void;
+  errors?: Record<string, unknown>;
   onDelete?: () => void;
   handleItemBlur?: (itemId: string, field: string) => void;
 };
@@ -37,18 +37,24 @@ export default function AccordionItem({
   handleItemBlur,
 }: AccordionItemProps) {
   function getError(
-    errors: Record<string, any> | undefined,
+    errors: Record<string, unknown> | undefined,
     itemTypeKey: string,
     itemId: string | number,
     field: string,
-  ) {
+  ): string | undefined {
     if (!errors) return undefined;
     const flatKey = `${itemTypeKey}.${itemId}.${field}`;
-    if (flatKey in errors) return errors[flatKey];
+    if (flatKey in errors) {
+      const v = errors[flatKey];
+      return v != null ? String(v) : undefined;
+    }
     const typeObj = errors[itemTypeKey];
     if (typeObj && typeof typeObj === 'object') {
-      const idObj = typeObj[itemId];
-      if (idObj && typeof idObj === 'object') return idObj[field];
+      const idObj = (typeObj as Record<string | number, unknown>)[itemId];
+      if (idObj && typeof idObj === 'object') {
+        const v = (idObj as Record<string, unknown>)[field];
+        return v != null ? String(v) : undefined;
+      }
     }
     return undefined;
   }
@@ -58,7 +64,7 @@ export default function AccordionItem({
     >
       <div onClick={toggleOpen} className="flex flex-row justify-between items-center">
         <div className="flex">
-          <span> {'name' in item ? item.name : item.assetName}</span>{' '}
+          <span> {'name' in item ? String(item.name) : String(item.assetName)}</span>{' '}
           <Image
             onClick={(e) => {
               e.stopPropagation(); // Prevent accidental open/close on edit
@@ -82,10 +88,10 @@ export default function AccordionItem({
                 label={f.label}
                 type={f.type}
                 enumOptions={f.enumOptions}
-                value={item[f.field]}
-                onChange={(v) => handleItemInput(item.id, f.field, v)}
-                onBlur={() => handleItemBlur?.(item.id, f.field)}
-                err={getError(errors, itemTypeKey, item.id, f.field)}
+                value={item[f.field] != null ? String(item[f.field]) : ''}
+                onChange={(v) => handleItemInput(String(item.id), f.field, v)}
+                onBlur={() => handleItemBlur?.(String(item.id), f.field)}
+                err={getError(errors, itemTypeKey, String(item.id), f.field)}
               ></FieldInput>
             ),
           )}

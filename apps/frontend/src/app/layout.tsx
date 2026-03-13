@@ -1,6 +1,5 @@
 import './globals.css';
 import type { ReactNode } from 'react';
-import type { FinanceSourceType } from '@/types/finance';
 import Header from '@/components/Header';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';

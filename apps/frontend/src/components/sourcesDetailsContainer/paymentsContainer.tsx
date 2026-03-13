@@ -98,7 +98,7 @@ export default function PaymentsContainer({ payment, open, onClick }: PaymentsCo
       {open && (
         <div>
           {fields.map(([field, label]) => {
-            // @ts-ignore: Index dynamic field
+            // @ts-expect-error: Index dynamic field
             const value = payment[field];
             const isLoopedFinanceDate =
               field === 'date' && isFinancePayment(payment) && Boolean(payment.loop);

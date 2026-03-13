@@ -21,11 +21,13 @@ export default function CreateSourceModal({ open, onClose, onSubmit }: Props) {
     date: '',
   });
   const [error, setError] = useState('');
-
+  function emptyFields() {
+    setFields({ name: '', description: '', date: '' });
+    setError('');
+  }
   useEffect(() => {
-    if (open) {
-      setFields({ name: '', description: '', date: '' });
-      setError('');
+    if (!open) {
+      return;
     }
   }, [open]);
 
@@ -41,6 +43,7 @@ export default function CreateSourceModal({ open, onClose, onSubmit }: Props) {
       setError('Source Name is required');
       return;
     }
+    emptyFields();
     onSubmit(fields);
   }
 
