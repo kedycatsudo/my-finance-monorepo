@@ -50,8 +50,9 @@ export default function AddPaymentModal({
   useEffect(() => {
     if (!open) return;
   }, [open]);
-  function getFieldValue(field: keyof FinancePayment): string {
+  function getFieldValue(field: keyof FinancePayment): string | boolean {
     const v = form[field];
+    if (typeof v === 'boolean') return v;
     return typeof v === 'string' ? v : String(v ?? '');
   }
   function handleInput(field: keyof FinancePayment, value: string | number | boolean) {

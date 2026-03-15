@@ -31,7 +31,9 @@ function getAuthHeader(): Record<string, string> {
 
   return token ? { authorization: `Bearer ${token}` } : {};
 }
-
+function getErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
+}
 export function OutcomesProvider2({ children }: { children: ReactNode }) {
   const { jwt } = useAuth();
 
@@ -54,8 +56,8 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       }
       const payload = await res.json();
       setData(Array.isArray(payload) ? payload : []);
-    } catch (error: any) {
-      setError(error.message || 'Could not fetch outcomes.');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Could not fetch outcomes.'));
       setData([]);
     } finally {
       setLoading(false);
@@ -88,8 +90,8 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       }
       const newOutcome = await res.json();
       setData((prev) => [...prev, newOutcome]);
-    } catch (error: any) {
-      setError(error.message || 'Failed to add income');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to add income'));
     } finally {
       setLoading(false);
     }
@@ -107,13 +109,13 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
           body: JSON.stringify(source),
         },
       );
-      if (!res.ok) throw new Error('Failed to remove income');
+      if (!res.ok) throw new Error('Failed to remove outcome');
       const response = await res.json();
       // Replace the entire source with the updated one from backend
       setData((prev) => prev.map((src) => (src.id === source.id ? response.updated_source : src)));
       return response.updated_source;
-    } catch (error: any) {
-      setError(error.message || 'Failed to update income');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to update outcome'));
     } finally {
       setLoading(false);
     }
@@ -132,8 +134,8 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       if (!res.ok) throw new Error('Failed to remove outcome');
       setData((prev) => prev.filter((i) => i.id !== sourceId));
       return true;
-    } catch (error: any) {
-      setError(error.message || 'Failed to remove the outcome source');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to remove the outcome source'));
       return false;
     } finally {
       setLoading(false);
@@ -173,8 +175,8 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         ),
       );
       return createdPayment;
-    } catch (error: any) {
-      setError(error.message || 'Failed to add payment');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to add payment'));
       return null;
     } finally {
       setLoading(false);
@@ -233,8 +235,8 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         null;
 
       return updatedPayment;
-    } catch (error: any) {
-      setError(error.message || 'Failed to update payment');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to update payment'));
       return null;
     } finally {
       setLoading(false);
@@ -263,8 +265,8 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         ),
       );
       return true;
-    } catch (error: any) {
-      setError(error.message || 'Failed to remove outcome payment');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to remove outcome payment'));
       return false;
     } finally {
       setLoading(false);

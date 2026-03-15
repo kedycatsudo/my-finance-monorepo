@@ -13,7 +13,30 @@ import {
 type InvestmentSourceInput = Omit<InvestmentSource, 'id' | 'items' | 'sourceType'> & {
   description?: string;
 };
-
+type ApiInvestmentSource = {
+  id?: string | number;
+  name?: string;
+  description?: string | null;
+  type?: 'investment' | 'crypto' | 'forex' | string;
+  investmentItems?: ApiInvestmentItem[];
+  items?: ApiInvestmentItem[];
+};
+type ApiInvestmentItem = {
+  id?: string | number;
+  assetName?: string;
+  asset_name?: string;
+  term?: InvestmentTerm;
+  investedAmount?: number | string;
+  invested_amount?: number | string;
+  entryDate?: string;
+  entry_date?: string;
+  exitDate?: string | null;
+  exit_date?: string | null;
+  result?: InvestmentResult;
+  resultAmount?: number | string | null;
+  result_amount?: number | string | null;
+  status?: InvestmentStatus;
+};
 type InvestmentContextType = {
   data: InvestmentSource[];
   setData: React.Dispatch<React.SetStateAction<InvestmentSource[]>>;
@@ -38,6 +61,9 @@ type InvestmentContextType = {
 
 const InvestmentContext = createContext<InvestmentContextType | undefined>(undefined);
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
+}
 function getAutheader(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   return token ? { authorization: `Bearer ${token}` } : {};
@@ -47,7 +73,7 @@ function getApiBase(): string {
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
-function toInvestmentItem(apiItem: any): InvestmentItem {
+function toInvestmentItem(apiItem: ApiInvestmentItem): InvestmentItem {
   return {
     id: String(apiItem.id),
     assetName: apiItem.assetName ?? apiItem.asset_name ?? '',
@@ -66,18 +92,19 @@ function toInvestmentItem(apiItem: any): InvestmentItem {
   };
 }
 
-function toInvestmentSource(apiSource: any): InvestmentSource {
-  const rawItems = Array.isArray(apiSource?.investmentItems)
+function toInvestmentSource(apiSource: ApiInvestmentSource): InvestmentSource {
+  const rawItems = Array.isArray(apiSource.investmentItems)
     ? apiSource.investmentItems
-    : Array.isArray(apiSource?.items)
+    : Array.isArray(apiSource.items)
       ? apiSource.items
       : [];
 
-  const sourceType = apiSource?.type;
+  const sourceType = apiSource.type;
   const safeType: InvestmentSource['type'] =
     sourceType === 'crypto' || sourceType === 'forex' || sourceType === 'investment'
       ? sourceType
       : 'investment';
+
   return {
     id: String(apiSource.id),
     name: apiSource.name ?? '',
@@ -132,8 +159,9 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
       const payload = await res.json();
       const mapped = Array.isArray(payload) ? payload.map(toInvestmentSource) : [];
       setData(mapped);
-    } catch (error: any) {
-      setError(error.message || 'Coud not fetch investments');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Could not fetch investments'));
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -148,6 +176,8 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
     }
     fetchSources();
   }, [jwt]);
+
+  // ----- Add investement-----
 
   const addSource = async (source: InvestmentSourceInput): Promise<InvestmentSource | null> => {
     setLoading(true);
@@ -166,13 +196,14 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
       const created = toInvestmentSource(await res.json());
       setData((prev) => [...prev, created]);
       return created;
-    } catch (error: any) {
-      setError(error.message || 'Failed to add investment source');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to add investment source'));
       return null;
     } finally {
       setLoading(false);
     }
   };
+  // ----- Update investement  -----
 
   const updateSource = async (source: InvestmentSource): Promise<InvestmentSource | null> => {
     setLoading(true);
@@ -207,13 +238,15 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
       );
 
       return updatedSource;
-    } catch (err: any) {
-      setError(err.message || 'Failed to update investment source');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to update investment source'));
       return null;
     } finally {
       setLoading(false);
     }
   };
+
+  // ----- Remove investment -----
 
   const removeSource = async (sourceId: string): Promise<boolean> => {
     setLoading(true);
@@ -228,13 +261,14 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
 
       setData((prev) => prev.filter((s) => s.id !== sourceId));
       return true;
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove investment source');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to remove investment source'));
       return false;
     } finally {
       setLoading(false);
     }
   };
+  //---add item---
 
   const fetchItemsBySource = async (sourceId: string): Promise<InvestmentItem[]> => {
     try {
@@ -247,8 +281,10 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
       const items = Array.isArray(payload) ? payload.map(toInvestmentItem) : [];
       setData((prev) => prev.map((src) => (src.id === sourceId ? { ...src, items } : src)));
       return items;
-    } catch (error: any) {}
-    return [];
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to fetch items for source'));
+      return [];
+    }
   };
 
   const addItem = async (
@@ -272,8 +308,8 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         ),
       );
       return created;
-    } catch (error: any) {
-      setError(error.message || 'Failed to add investment item');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to add investment item'));
       return null;
     } finally {
       setLoading(false);
@@ -307,8 +343,8 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         ),
       );
       return updated;
-    } catch (error: any) {
-      setError(error.message || 'Failed to update investment item');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to update investment item'));
       return null;
     } finally {
       setLoading(false);
@@ -331,8 +367,8 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         ),
       );
       return true;
-    } catch (error: any) {
-      setError(error.message || 'Failed to remove investment item.');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to update investment item'));
       return false;
     } finally {
       setLoading(false);

@@ -27,9 +27,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   backendRes.headers.forEach((val, key) => res.setHeader(key, val));
   const raw = await backendRes.text();
 
+  type RawPayment = Record<string, unknown>;
+
   try {
-    const parsed = JSON.parse(raw);
-    const mapPayment = (payment: any) => ({
+    const parsed: unknown = JSON.parse(raw);
+    const mapPayment = (payment: RawPayment) => ({
       ...payment,
       amount:
         payment?.amount !== undefined && payment?.amount !== null
@@ -44,17 +46,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       parsed &&
       typeof parsed === 'object' &&
       'finance_payments' in parsed &&
-      Array.isArray((parsed as any).finance_payments)
+      Array.isArray((parsed as Record<string, unknown>).finance_payments)
     ) {
+      const typedParsed = parsed as Record<string, unknown>;
       transformed = {
-        ...parsed,
-        finance_payments: (parsed as any).finance_payments.map(mapPayment),
+        ...typedParsed,
+        finance_payments: (typedParsed.finance_payments as RawPayment[]).map(mapPayment),
       };
     } else {
-      transformed = mapPayment(parsed);
+      transformed = mapPayment(parsed as RawPayment);
     }
     return res.send(JSON.stringify(transformed));
-  } catch (error: any) {
+  } catch {
     return res.send(raw);
   }
 }

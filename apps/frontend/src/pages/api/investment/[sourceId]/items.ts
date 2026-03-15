@@ -8,7 +8,9 @@ function dateOnlyToIso(value?: string | null) {
   return `${value}T00:00:00.000Z`;
 }
 
-function mapItemFromBackend(item: any) {
+type RawItem = Record<string, unknown>;
+
+function mapItemFromBackend(item: RawItem) {
   return {
     id: item?.id,
     assetName: item?.asset_name ?? item.assetName ?? '',
@@ -77,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.send(JSON.stringify(parsed.map(mapItemFromBackend)));
     }
     return res.send(JSON.stringify(mapItemFromBackend(parsed)));
-  } catch (error: any) {
+  } catch {
     return res.send(raw);
   }
 }

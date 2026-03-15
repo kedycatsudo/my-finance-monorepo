@@ -3,7 +3,7 @@
 type FieldInputProps = {
   label: string;
   type?: string;
-  value: string | number | null | undefined;
+  value: string | number | boolean | null | undefined;
   onChange: (v: string | number | boolean) => void;
   enumOptions?: string[];
   err?: string;
@@ -35,7 +35,7 @@ export default function FieldInput({
         {' '}
         <span className="block">{label}</span>
         <select
-          value={value === null ? undefined : value}
+          value={value == null ? undefined : typeof value === 'boolean' ? String(value) : value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           className="rounded border px-2 py-1 mt-1 w-full text-black"
@@ -72,7 +72,11 @@ export default function FieldInput({
       <input
         type={type || 'text'}
         value={
-          type === 'date' ? toDateInputValue(value === null ? '' : String(value)) : (value ?? '')
+          type === 'date'
+            ? toDateInputValue(value === null || typeof value === 'boolean' ? '' : String(value))
+            : typeof value === 'boolean'
+              ? ''
+              : (value ?? '')
         }
         onChange={(e) =>
           onChange(

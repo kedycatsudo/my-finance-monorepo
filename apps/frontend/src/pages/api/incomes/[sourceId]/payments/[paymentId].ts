@@ -38,7 +38,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const parsed = JSON.parse(raw);
 
-    const mapPayment = (p: any) =>
+    type RawPayment = Record<string, unknown>;
+    const mapPayment = (p: RawPayment | null) =>
       p
         ? {
             ...p,

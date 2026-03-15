@@ -8,7 +8,9 @@ function dateOnlyToIso(value?: string | null) {
   return `${value}T00:00:00.000Z`;
 }
 
-function mapItemFromBackend(item: any) {
+type RawItem = Record<string, unknown>;
+
+function mapItemFromBackend(item: RawItem | null) {
   if (!item) return item;
 
   return {

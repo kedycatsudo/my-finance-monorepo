@@ -25,20 +25,30 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const [localSource, setLocalSource] = useState<FinanceSource | InvestmentSource>(source);
   const [openItemAccordions, setOpenItemAccordions] = useState<{ [id: string]: boolean }>({});
   const [errors, setErrors] = useState<{ [field: string]: string }>({});
-  const [showAppModal, setShowAppModal] = useState<boolean | null>(null);
+  const [, setShowAppModal] = useState<boolean | null>(null);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showAddInvestmentItemModal, setShowAddInvestmentItemModal] = useState(false);
+  const [prevSourceId, setPrevSourceId] = useState(source.id);
+  const [prevOpen, setPrevOpen] = useState(open);
   const { showModal, showConfirmModal, closeModal } = useModal();
   const { removeIncomePayment } = useIncomesContext();
   const { removeOutcomePayment } = useOutcomesContext();
   const { updateItem, removeItem } = useInvestmentsContext();
-  // Sync localSource when payment is added
+
+  // Derived state: reset when modal opens or source changes (React-idiomatic pattern)
+  if (source.id !== prevSourceId || (open && !prevOpen)) {
+    setPrevSourceId(source.id);
+    setPrevOpen(open);
+    setLocalSource(source);
+    setOpenItemAccordions({});
+    setErrors({});
+  }
+
   function intialization() {
     setLocalSource(source);
     setOpenItemAccordions({});
     setErrors({});
   }
-  useEffect(() => {}, [source, open]);
 
   const handlePaymentAdded = (created: FinancePayment) => {
     setLocalSource((prev) =>

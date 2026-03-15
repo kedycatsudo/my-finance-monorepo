@@ -82,18 +82,32 @@ export default function AccordionItem({
       {isOpen && (
         <div className="mt-2 flex flex-col gap-2">
           {fieldConfig.map((f) =>
-            f.field === 'id' ? null : (
-              <FieldInput
-                key={f.field}
-                label={f.label}
-                type={f.type}
-                enumOptions={f.enumOptions}
-                value={item[f.field] != null ? String(item[f.field]) : ''}
-                onChange={(v) => handleItemInput(String(item.id), f.field, v)}
-                onBlur={() => handleItemBlur?.(String(item.id), f.field)}
-                err={getError(errors, itemTypeKey, String(item.id), f.field)}
-              ></FieldInput>
-            ),
+            f.field === 'id'
+              ? null
+              : (() => {
+                  const rawValue = item[f.field];
+                  const inputValue =
+                    typeof rawValue === 'string' ||
+                    typeof rawValue === 'number' ||
+                    typeof rawValue === 'boolean'
+                      ? rawValue
+                      : rawValue == null
+                        ? ''
+                        : String(rawValue);
+
+                  return (
+                    <FieldInput
+                      key={f.field}
+                      label={f.label}
+                      type={f.type}
+                      enumOptions={f.enumOptions}
+                      value={inputValue}
+                      onChange={(v) => handleItemInput(String(item.id), f.field, v)}
+                      onBlur={() => handleItemBlur?.(String(item.id), f.field)}
+                      err={getError(errors, itemTypeKey, String(item.id), f.field)}
+                    ></FieldInput>
+                  );
+                })(),
           )}
         </div>
       )}{' '}

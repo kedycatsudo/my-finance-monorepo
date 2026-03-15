@@ -28,7 +28,9 @@ function getAuthHeader(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   return token ? { authorization: `Bearer ${token}` } : {};
 }
-
+function getErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
+}
 export function IncomesProvider2({ children }: { children: ReactNode }) {
   const { jwt } = useAuth();
   const [data, setData] = useState<FinanceSource[]>([]);
@@ -50,8 +52,8 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
 
       const payload = await res.json();
       setData(Array.isArray(payload) ? payload : []);
-    } catch (err: any) {
-      setError(err.message || 'Could not fetch incomes');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Could not fetch incomes'));
       setData([]);
     } finally {
       setLoading(false);
@@ -70,6 +72,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   }, [jwt]);
 
   // ----- Add income-----
+
   const addSource = async (source: Omit<FinanceSource, 'id'>) => {
     setLoading(true);
     setError(null);
@@ -82,8 +85,8 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       if (!res.ok) throw new Error(`Failed to add income`);
       const newIncome = await res.json();
       setData((prev) => [...prev, newIncome]);
-    } catch (err: any) {
-      setError(err.message || 'Failed to add income');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to add income'));
     } finally {
       setLoading(false);
     }
@@ -109,8 +112,9 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       // Replace the entire source with the updated one from backend
       setData((prev) => prev.map((src) => (src.id === source.id ? response.updated_source : src)));
       return response.updated_source;
-    } catch (err: any) {
-      setError(err.message || 'Failed to update income');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to update income'));
+      return null;
     } finally {
       setLoading(false);
     }
@@ -131,8 +135,8 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       if (!res.ok) throw new Error('Failed to remove income');
       setData((prev) => prev.filter((i) => i.id !== sourceId));
       return true;
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove income');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to remove income'));
       return false;
     } finally {
       setLoading(false);
@@ -140,7 +144,6 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
   };
 
   //---add payment---
-  // apps/frontend/src/context/IncomesContext.tsx
   const addPaymentToIncomes = async (
     sourceId: string,
     payment: FinancePayment,
@@ -182,8 +185,8 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       );
 
       return createdPayment;
-    } catch (error: any) {
-      setError(error.message || 'Failed to add payment');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to add payment'));
       return null;
     } finally {
       setLoading(false);
@@ -239,8 +242,8 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
           (p: FinancePayment) => p.id === paymentId,
         ) || null;
       return updatedPayment;
-    } catch (error: any) {
-      setError(error.message || 'Failed to update payment');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to update payment'));
       return null;
     } finally {
       setLoading(false);
@@ -273,8 +276,8 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         ),
       );
       return true;
-    } catch (error: any) {
-      setError(error.message || 'Failed to remove payment');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to remove payment'));
       return false;
     } finally {
       setLoading(false);
