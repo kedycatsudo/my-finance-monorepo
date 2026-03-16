@@ -76,7 +76,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
   const handleSourceInput = (field: string, value: string) => {
     setLocalSource((prev) => ({ ...prev, [field]: value }) as FinanceSource | InvestmentSource);
   };
-  const handleItemInput = async (itemId: string, field: string, value: string) => {
+  const handleItemInput = (itemId: string, field: string, value: string | number | boolean) => {
     if (isFinanceSource(localSource)) {
       setLocalSource((prev) =>
         isFinanceSource(prev)
@@ -184,7 +184,7 @@ export default function EditSourceModal({ open, source, onClose, onSubmit }: Edi
                 label={f.label}
                 type={f.type}
                 value={f.value}
-                onChange={(v) => handleSourceInput(f.field ?? '', v)}
+                onChange={(v) => handleSourceInput(f.field ?? '', String(v))}
                 err={f.err}
               />
             ))}
