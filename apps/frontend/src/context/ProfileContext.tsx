@@ -50,7 +50,7 @@ function normalizeProfile(raw: ApiProfile | null | undefined): Profile {
 }
 
 function getApiBase(): string {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 

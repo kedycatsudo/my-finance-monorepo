@@ -6,6 +6,7 @@ import { proxyToBackend } from '@/utils/proxyToBackend';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { sourceId } = req.query;
   let backendPath = '/api/incomes/sources';
+
   if (req.method === 'PATCH' || req.method === 'DELETE') {
     if (!sourceId || Array.isArray(sourceId)) {
       return res.status(400).json({ message: 'sourceId is required' });
@@ -19,9 +20,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ? JSON.stringify(req.body)
       : undefined,
   });
-  res.status(backendRes.status);
-  backendRes.headers.forEach((val, key) => res.setHeader(key, val));
-  const data = await backendRes.json();
 
-  return res.send(data);
+  const raw = await backendRes.text();
+
+  // Don't forward content-encoding/content-length from backend when re-sending body.
+  res.status(backendRes.status);
+
+  try {
+    return res.send(JSON.parse(raw));
+  } catch {
+    return res.send(raw);
+  }
 }

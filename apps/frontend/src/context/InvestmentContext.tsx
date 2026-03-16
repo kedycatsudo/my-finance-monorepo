@@ -69,7 +69,7 @@ function getAutheader(): Record<string, string> {
   return token ? { authorization: `Bearer ${token}` } : {};
 }
 function getApiBase(): string {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
