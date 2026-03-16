@@ -73,6 +73,12 @@ function getApiBase(): string {
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
+async function readJsonSafe<T>(res: Response): Promise<T | null> {
+  const raw = await res.text();
+  if (!raw) return null;
+  return JSON.parse(raw) as T;
+}
+
 function toInvestmentItem(apiItem: ApiInvestmentItem): InvestmentItem {
   return {
     id: String(apiItem.id),
@@ -156,7 +162,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         headers: { ...getAutheader() },
       });
       if (!res.ok) throw new Error(`Could not fetch investments(${res.status})`);
-      const payload = await res.json();
+      const payload = await readJsonSafe<unknown>(res);
       const mapped = Array.isArray(payload) ? payload.map(toInvestmentSource) : [];
       setData(mapped);
     } catch (error: unknown) {
@@ -193,7 +199,9 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         }),
       });
       if (!res.ok) throw new Error('Failed to add investment source');
-      const created = toInvestmentSource(await res.json());
+      const createdRaw = await readJsonSafe<ApiInvestmentSource>(res);
+      if (!createdRaw) throw new Error('Empty response while adding investment source');
+      const created = toInvestmentSource(createdRaw);
       setData((prev) => [...prev, created]);
       return created;
     } catch (error: unknown) {
@@ -221,7 +229,8 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
 
       if (!res.ok) throw new Error('Failed to update investment source');
 
-      const updatedApi = await res.json();
+      const updatedApi = await readJsonSafe<Partial<ApiInvestmentSource>>(res);
+      if (!updatedApi) throw new Error('Empty response while updating investment source');
 
       let updatedSource: InvestmentSource | null = null;
       setData((prev) =>
@@ -277,7 +286,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         headers: { ...getAutheader() },
       });
       if (!res.ok) throw new Error('Failed to fetch items for source');
-      const payload = await res.json();
+      const payload = await readJsonSafe<unknown>(res);
       const items = Array.isArray(payload) ? payload.map(toInvestmentItem) : [];
       setData((prev) => prev.map((src) => (src.id === sourceId ? { ...src, items } : src)));
       return items;
@@ -300,7 +309,9 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(toCreateItemBody(item)),
       });
       if (!res.ok) throw new Error('Failed to add investment item');
-      const created = toInvestmentItem(await res.json());
+      const createdRaw = await readJsonSafe<ApiInvestmentItem>(res);
+      if (!createdRaw) throw new Error('Empty response while adding investment item');
+      const created = toInvestmentItem(createdRaw);
 
       setData((prev) =>
         prev.map((src) =>
@@ -331,7 +342,9 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
       });
 
       if (!res.ok) throw new Error('Failed to update investement item');
-      const updated = toInvestmentItem(await res.json());
+      const updatedRaw = await readJsonSafe<ApiInvestmentItem>(res);
+      if (!updatedRaw) throw new Error('Empty response while updating investment item');
+      const updated = toInvestmentItem(updatedRaw);
       setData((prev) =>
         prev.map((src) =>
           src.id === sourceId

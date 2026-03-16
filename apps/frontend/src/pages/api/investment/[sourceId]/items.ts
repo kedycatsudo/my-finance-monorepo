@@ -71,14 +71,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   res.status(backendRes.status);
-  backendRes.headers.forEach((val, key) => res.setHeader(key, val));
   const raw = await backendRes.text();
+
+  if (!raw) {
+    return res.json(null);
+  }
+
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return res.send(JSON.stringify(parsed.map(mapItemFromBackend)));
+      return res.json(parsed.map(mapItemFromBackend));
     }
-    return res.send(JSON.stringify(mapItemFromBackend(parsed)));
+    return res.json(mapItemFromBackend(parsed));
   } catch {
     return res.send(raw);
   }
