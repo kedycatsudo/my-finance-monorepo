@@ -26,8 +26,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Don't forward content-encoding/content-length from backend when re-sending body.
   res.status(backendRes.status);
 
+  if (!raw) {
+    return res.json(null);
+  }
+
   try {
-    return res.send(JSON.parse(raw));
+    return res.json(JSON.parse(raw));
   } catch {
     return res.send(raw);
   }

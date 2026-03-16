@@ -17,11 +17,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       : undefined,
   });
   res.status(backendRes.status);
-  backendRes.headers.forEach((val, key) => res.setHeader(key, val));
 
   const raw = await backendRes.text();
+
+  if (!raw) {
+    return res.json(null);
+  }
+
   try {
-    return res.send(JSON.parse(raw));
+    return res.json(JSON.parse(raw));
   } catch {
     return res.send(raw);
   }
