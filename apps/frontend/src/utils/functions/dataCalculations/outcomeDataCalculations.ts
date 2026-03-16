@@ -58,7 +58,7 @@ export function TotalOutcomesPaidAmount({ data }: DataCalculationProps): number 
     .filter((payment) => payment.status === 'paid')
     .reduce((sum, payment) => sum + payment.amount, 0);
 }
-export function outcomeUpcoming({ data }: DataCalculationProps): object {
+export function outcomeUpcoming({ data }: DataCalculationProps): FinancePayment[] {
   const sources: FinanceSource[] = Array.isArray(data) ? (data as FinanceSource[]) : [];
   return sources
     .flatMap((outcome) =>

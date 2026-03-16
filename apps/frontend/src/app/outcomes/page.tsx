@@ -54,7 +54,7 @@ export default function Outcomes() {
   };
   //Quick reachs
   const outcomesUpcoming = outcomeUpcoming({ data: outcomes });
-  const upcomingPaymentsCount = Array.isArray(outcomesUpcoming) ? outcomeUpcoming.length : 0;
+  const upcomingPaymentsCount = Array.isArray(outcomesUpcoming) ? outcomesUpcoming.length : 0;
   const upcomingOutcomeAmount = UpcomingOutcomeAmount({ data: outcomes });
   const recentPaid = RecentPaid({ data: outcomes });
   const upcomingPayment = UpcomingPayment({ data: outcomes });
