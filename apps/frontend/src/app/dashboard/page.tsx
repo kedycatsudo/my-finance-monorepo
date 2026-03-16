@@ -97,7 +97,6 @@ export default function Dashboard() {
     unit: '$',
     date: p.date,
   }));
-  console.log(allOutcomePayments);
   const recentIncomes = allIncomePayments.slice(0, 5).map((p) => ({
     name: p.name,
     data: toAmount(p.amount),
