@@ -84,7 +84,7 @@ export class IncomesPaymentService {
     ) {
       throw new Error('Payment not found or unauthorized.');
     }
-    const updateData: any = {};
+    const updateData: Prisma.FinancePaymentsUpdateInput = {};
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.amount !== undefined) updateData.amount = dto.amount;
     if (dto.payment_type !== undefined)
@@ -92,7 +92,7 @@ export class IncomesPaymentService {
     if (dto.loop !== undefined) updateData.loop = dto.loop;
     if (dto.status !== undefined)
       updateData.status = dto.status as $Enums.payment_status;
-    updateData.financesource_id = sourceId;
+    updateData.finance_sources = { connect: { id: sourceId } };
     if (dto.date !== undefined) {
       updateData.date = this.normalizeDate(dto.date);
     }

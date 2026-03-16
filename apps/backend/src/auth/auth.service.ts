@@ -3,7 +3,17 @@ import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { RegisterDto } from './dto/register.dto';
-import { loginDto } from './dto/login.dto';
+type LoggedInUser = {
+  id: string;
+  username: string;
+  // add any other fields returned from validateUser
+};
+type ValidatedUser = {
+  id: string;
+  username: string;
+  email: string;
+  monthly_circle_date: string | null;
+};
 
 @Injectable()
 export class AuthService {
@@ -11,16 +21,19 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<ValidatedUser | null> {
     const user = await this.usersService.findByUsername(username);
     //bcrypt compare
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
+      const { password: _password, ...result } = user;
       return result;
     }
     return null;
   }
-  async login(user: any) {
+  async login(user: LoggedInUser) {
     const payload = { username: user.username, sub: user.id };
 
     const access_token = this.jwtService.sign(payload);
@@ -51,7 +64,7 @@ export class AuthService {
       monthly_circle_date,
       password: hashedPassword,
     });
-    const { password: pw, ...userWithoutPassword } = user;
+    const { password: _pw, ...userWithoutPassword } = user;
     const payload = { username: user.username, sub: user.id };
     const access_token = this.jwtService.sign(payload);
     return { access_token, user: userWithoutPassword };

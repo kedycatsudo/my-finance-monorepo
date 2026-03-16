@@ -84,7 +84,7 @@ export class OutcomesPaymentService {
       throw new Error('Payment not found or unauthorized.');
     }
     // Build update data object with only defined fields
-    const updateData: any = {};
+    const updateData: Prisma.FinancePaymentsUpdateInput = {};
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.amount !== undefined) updateData.amount = dto.amount;
     if (dto.payment_type !== undefined)
@@ -94,7 +94,7 @@ export class OutcomesPaymentService {
     if (dto.status !== undefined)
       updateData.status = dto.status as $Enums.payment_status;
     // Always update financesource_id
-    updateData.financesource_id = sourceId;
+    updateData.finance_sources = { connect: { id: sourceId } };
     return this.prisma.financePayments.update({
       where: { id: paymentId },
       data: updateData,

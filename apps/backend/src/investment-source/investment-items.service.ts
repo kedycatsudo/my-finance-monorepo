@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInvestmentItemDto } from './dto/create-investment-item.dto';
 import { UpdateInvestmentItemDto } from './dto/update-investment-item.dto';
-import { Prisma, $Enums } from '@prisma/client';
+import { $Enums } from '@prisma/client';
 
 function normalizeDateTime(value?: string | null): string | null | undefined {
   if (value === undefined) return undefined;

@@ -2,7 +2,6 @@ import { CreateInvestmentSourceDto } from './dto/create-investment-source.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { UpdateInvestmentSourceDto } from './dto/update-investment-source.dto';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class InvestmentSourceService {

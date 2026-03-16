@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreateOutcomeSourceDto {
   @IsString()

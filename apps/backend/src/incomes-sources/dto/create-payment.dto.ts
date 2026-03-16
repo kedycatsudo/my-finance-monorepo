@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsBoolean,
-  IsOptional,
-  IsDate,
-} from 'class-validator';
+import { IsString, IsNumber, IsBoolean } from 'class-validator';
 
 export class CreataIncomePaymentDto {
   @IsString()

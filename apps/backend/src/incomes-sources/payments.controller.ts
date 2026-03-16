@@ -43,12 +43,7 @@ export class IncomesPaymentsController {
     @Param('paymentId') paymentId: string,
     @Body() dto: UpdateIncomePaymentDto,
   ) {
-    const updated = await this.service.update(
-      req.user.userId,
-      sourceId,
-      paymentId,
-      dto,
-    );
+    await this.service.update(req.user.userId, sourceId, paymentId, dto);
     // Fetch the complete source with all updated payments
     const updated_source = await this.prisma.financeSources.findUnique({
       where: { id: sourceId },

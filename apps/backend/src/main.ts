@@ -11,4 +11,4 @@ async function bootstrap() {
   await app.listen(3001); // ensure port differs from FE if needed
 }
 
-bootstrap();
+void bootstrap();
