@@ -64,6 +64,32 @@ const InvestmentContext = createContext<InvestmentContextType | undefined>(undef
 function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
 }
+
+type ApiErrorBody = {
+  message?: string | string[];
+};
+
+async function buildApiError(res: Response, fallback: string): Promise<Error> {
+  if (res.status === 401) {
+    return new Error('Session expired or unauthorized (401). Please log in again.');
+  }
+
+  try {
+    const raw = await res.text();
+    if (!raw) return new Error(`${fallback} (${res.status})`);
+
+    const parsed = JSON.parse(raw) as ApiErrorBody | string;
+    if (typeof parsed === 'string') {
+      return new Error(`${parsed} (${res.status})`);
+    }
+
+    const message = Array.isArray(parsed?.message) ? parsed.message.join(', ') : parsed?.message;
+    return new Error(message ? `${message} (${res.status})` : `${fallback} (${res.status})`);
+  } catch {
+    return new Error(`${fallback} (${res.status})`);
+  }
+}
+
 function getAutheader(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   return token ? { authorization: `Bearer ${token}` } : {};
@@ -161,7 +187,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         method: 'GET',
         headers: { ...getAutheader() },
       });
-      if (!res.ok) throw new Error(`Could not fetch investments(${res.status})`);
+      if (!res.ok) throw await buildApiError(res, 'Could not fetch investments');
       const payload = await readJsonSafe<unknown>(res);
       const mapped = Array.isArray(payload) ? payload.map(toInvestmentSource) : [];
       setData(mapped);
@@ -198,7 +224,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
           type: source.type,
         }),
       });
-      if (!res.ok) throw new Error('Failed to add investment source');
+      if (!res.ok) throw await buildApiError(res, 'Failed to add investment source');
       const createdRaw = await readJsonSafe<ApiInvestmentSource>(res);
       if (!createdRaw) throw new Error('Empty response while adding investment source');
       const created = toInvestmentSource(createdRaw);
@@ -227,7 +253,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to update investment source');
+      if (!res.ok) throw await buildApiError(res, 'Failed to update investment source');
 
       const updatedApi = await readJsonSafe<Partial<ApiInvestmentSource>>(res);
       if (!updatedApi) throw new Error('Empty response while updating investment source');
@@ -266,7 +292,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         headers: { ...getAutheader() },
       });
 
-      if (!res.ok) throw new Error('Failed to remove investment source');
+      if (!res.ok) throw await buildApiError(res, 'Failed to remove investment source');
 
       setData((prev) => prev.filter((s) => s.id !== sourceId));
       return true;
@@ -285,7 +311,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         method: 'GET',
         headers: { ...getAutheader() },
       });
-      if (!res.ok) throw new Error('Failed to fetch items for source');
+      if (!res.ok) throw await buildApiError(res, 'Failed to fetch items for source');
       const payload = await readJsonSafe<unknown>(res);
       const items = Array.isArray(payload) ? payload.map(toInvestmentItem) : [];
       setData((prev) => prev.map((src) => (src.id === sourceId ? { ...src, items } : src)));
@@ -308,7 +334,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json', ...getAutheader() },
         body: JSON.stringify(toCreateItemBody(item)),
       });
-      if (!res.ok) throw new Error('Failed to add investment item');
+      if (!res.ok) throw await buildApiError(res, 'Failed to add investment item');
       const createdRaw = await readJsonSafe<ApiInvestmentItem>(res);
       if (!createdRaw) throw new Error('Empty response while adding investment item');
       const created = toInvestmentItem(createdRaw);
@@ -341,7 +367,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(toUpdateItemBody(item)),
       });
 
-      if (!res.ok) throw new Error('Failed to update investement item');
+      if (!res.ok) throw await buildApiError(res, 'Failed to update investement item');
       const updatedRaw = await readJsonSafe<ApiInvestmentItem>(res);
       if (!updatedRaw) throw new Error('Empty response while updating investment item');
       const updated = toInvestmentItem(updatedRaw);
@@ -371,7 +397,7 @@ export function InvestmentsProvider({ children }: { children: ReactNode }) {
         method: 'DELETE',
         headers: { ...getAutheader() },
       });
-      if (!res.ok) throw new Error('Failed to remove investment item.');
+      if (!res.ok) throw await buildApiError(res, 'Failed to remove investment item');
       setData((prev) =>
         prev.map((src) =>
           src.id === sourceId

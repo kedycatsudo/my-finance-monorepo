@@ -34,6 +34,32 @@ function getAuthHeader(): Record<string, string> {
 function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
 }
+
+type ApiErrorBody = {
+  message?: string | string[];
+};
+
+async function buildApiError(res: Response, fallback: string): Promise<Error> {
+  if (res.status === 401) {
+    return new Error('Session expired or unauthorized (401). Please log in again.');
+  }
+
+  try {
+    const raw = await res.text();
+    if (!raw) return new Error(`${fallback} (${res.status})`);
+
+    const parsed = JSON.parse(raw) as ApiErrorBody | string;
+    if (typeof parsed === 'string') {
+      return new Error(`${parsed} (${res.status})`);
+    }
+
+    const message = Array.isArray(parsed?.message) ? parsed.message.join(', ') : parsed?.message;
+    return new Error(message ? `${message} (${res.status})` : `${fallback} (${res.status})`);
+  } catch {
+    return new Error(`${fallback} (${res.status})`);
+  }
+}
+
 export function OutcomesProvider2({ children }: { children: ReactNode }) {
   const { jwt } = useAuth();
 
@@ -52,7 +78,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         headers: { authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        throw new Error(`Could not fetch outcomes ${res.status}`);
+        throw await buildApiError(res, 'Could not fetch outcomes');
       }
       const payload = await res.json();
       setData(Array.isArray(payload) ? payload : []);
@@ -86,7 +112,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         body: JSON.stringify(source),
       });
       if (!res.ok) {
-        throw new Error('Failed to add outcome');
+        throw await buildApiError(res, 'Failed to add outcome');
       }
       const newOutcome = await res.json();
       setData((prev) => [...prev, newOutcome]);
@@ -109,7 +135,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
           body: JSON.stringify(source),
         },
       );
-      if (!res.ok) throw new Error('Failed to remove outcome');
+      if (!res.ok) throw await buildApiError(res, 'Failed to update outcome');
       const response = await res.json();
       // Replace the entire source with the updated one from backend
       setData((prev) => prev.map((src) => (src.id === source.id ? response.updated_source : src)));
@@ -131,7 +157,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
           headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         },
       );
-      if (!res.ok) throw new Error('Failed to remove outcome');
+      if (!res.ok) throw await buildApiError(res, 'Failed to remove outcome');
       setData((prev) => prev.filter((i) => i.id !== sourceId));
       return true;
     } catch (error: unknown) {
@@ -159,7 +185,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         },
       );
       if (!res.ok) {
-        throw new Error('Failed to add payment');
+        throw await buildApiError(res, 'Failed to add payment');
       }
       const payload = await res.json();
       // backend create usually return one created payment object
@@ -201,7 +227,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
       );
 
       if (!res.ok) {
-        throw new Error('Failed to update payment');
+        throw await buildApiError(res, 'Failed to update payment');
       }
 
       const response = await res.json();
@@ -252,7 +278,7 @@ export function OutcomesProvider2({ children }: { children: ReactNode }) {
         { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...getAuthHeader() } },
       );
       if (!res.ok) {
-        throw new Error('Failed to remove outcome payment');
+        throw await buildApiError(res, 'Failed to remove outcome payment');
       }
       setData((prev) =>
         prev.map((src) =>

@@ -31,7 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   res.status(backendRes.status);
-  backendRes.headers.forEach((val, key) => res.setHeader(key, val));
 
   const raw = await backendRes.text();
 

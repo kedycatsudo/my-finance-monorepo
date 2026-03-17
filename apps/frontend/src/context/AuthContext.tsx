@@ -28,6 +28,30 @@ function getErrorMessage(error: unknown): string {
   return 'Internal Error';
 }
 
+type ApiErrorBody = {
+  message?: string | string[];
+};
+
+function buildApiError(status: number, fallback: string, body?: unknown): Error {
+  if (status === 401) {
+    return new Error('Session expired or unauthorized (401). Please log in again.');
+  }
+
+  if (typeof body === 'string' && body.trim()) {
+    return new Error(`${body} (${status})`);
+  }
+
+  if (body && typeof body === 'object') {
+    const typed = body as ApiErrorBody;
+    const message = Array.isArray(typed.message) ? typed.message.join(', ') : typed.message;
+    if (message) {
+      return new Error(`${message} (${status})`);
+    }
+  }
+
+  return new Error(`${fallback} (${status})`);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { setProfile } = useProfile();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -49,6 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        const mappedError = buildApiError(res.status, 'Login failed', data);
+        setError(mappedError.message);
+        return { success: false, message: mappedError.message };
+      }
+
       if (res.ok && data.access_token && data.user) {
         setJwt(data.access_token);
         setCurrentUser(data.user);
@@ -86,6 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ username, email, password, monthlyCircleDate }),
       });
       const data = await res.json();
+
+      if (!res.ok) {
+        const mappedError = buildApiError(res.status, 'Registration failed', data);
+        setError(mappedError.message);
+        return { success: false, message: mappedError.message };
+      }
+
       if (res.ok && data.access_token && data.user) {
         setJwt(data.access_token);
         setCurrentUser(data.user);

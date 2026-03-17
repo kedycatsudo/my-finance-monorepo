@@ -31,6 +31,32 @@ function getAuthHeader(): Record<string, string> {
 function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
 }
+
+type ApiErrorBody = {
+  message?: string | string[];
+};
+
+async function buildApiError(res: Response, fallback: string): Promise<Error> {
+  if (res.status === 401) {
+    return new Error('Session expired or unauthorized (401). Please log in again.');
+  }
+
+  try {
+    const raw = await res.text();
+    if (!raw) return new Error(`${fallback} (${res.status})`);
+
+    const parsed = JSON.parse(raw) as ApiErrorBody | string;
+    if (typeof parsed === 'string') {
+      return new Error(`${parsed} (${res.status})`);
+    }
+
+    const message = Array.isArray(parsed?.message) ? parsed.message.join(', ') : parsed?.message;
+    return new Error(message ? `${message} (${res.status})` : `${fallback} (${res.status})`);
+  } catch {
+    return new Error(`${fallback} (${res.status})`);
+  }
+}
+
 export function IncomesProvider2({ children }: { children: ReactNode }) {
   const { jwt } = useAuth();
   const [data, setData] = useState<FinanceSource[]>([]);
@@ -47,7 +73,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       });
 
       if (!res.ok) {
-        throw new Error(`Could not fetch incomes (${res.status})`);
+        throw await buildApiError(res, 'Could not fetch incomes');
       }
 
       const payload = await res.json();
@@ -82,7 +108,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(source),
       });
-      if (!res.ok) throw new Error(`Failed to add income`);
+      if (!res.ok) throw await buildApiError(res, 'Failed to add income');
       const newIncome = await res.json();
       setData((prev) => [...prev, newIncome]);
     } catch (err: unknown) {
@@ -106,7 +132,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         },
       );
       if (!res.ok) {
-        throw new Error('Failed to update income');
+        throw await buildApiError(res, 'Failed to update income');
       }
       const response = await res.json();
       // Replace the entire source with the updated one from backend
@@ -132,7 +158,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
           headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         },
       );
-      if (!res.ok) throw new Error('Failed to remove income');
+      if (!res.ok) throw await buildApiError(res, 'Failed to remove income');
       setData((prev) => prev.filter((i) => i.id !== sourceId));
       return true;
     } catch (err: unknown) {
@@ -162,7 +188,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       );
 
       if (!res.ok) {
-        throw new Error('Failed to add payment');
+        throw await buildApiError(res, 'Failed to add payment');
       }
 
       const payload = await res.json(); // read response body once
@@ -211,7 +237,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
       );
 
       if (!res.ok) {
-        throw new Error('Failed to update payment');
+        throw await buildApiError(res, 'Failed to update payment');
       }
 
       const response = await res.json();
@@ -263,7 +289,7 @@ export function IncomesProvider2({ children }: { children: ReactNode }) {
         },
       );
       if (!res.ok) {
-        throw new Error('Failed to remove income payment');
+        throw await buildApiError(res, 'Failed to remove income payment');
       }
       setData((prev) =>
         prev.map((src) =>

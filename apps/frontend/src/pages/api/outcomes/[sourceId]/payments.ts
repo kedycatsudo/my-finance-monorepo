@@ -24,7 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     body: mappedBody ? JSON.stringify(mappedBody) : undefined,
   });
   res.status(backendRes.status);
-  backendRes.headers.forEach((val, key) => res.setHeader(key, val));
   const raw = await backendRes.text();
 
   type RawPayment = Record<string, unknown>;
